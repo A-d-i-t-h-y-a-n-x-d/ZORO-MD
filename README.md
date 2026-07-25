@@ -50,7 +50,7 @@ Before deploying ZORO-MD, ensure you have the following ready:
 
 ### 1. Deploy on Cloud Platforms
 
-നിങ്ങളുടെ ബോട്ട് 24/7 റൺ ചെയ്യാൻ താഴെ നൽകിയിരിക്കുന്ന പ്ലാറ്റ്‌ഫോമുകളിൽ ഏതിലെങ്കിലും ഡിപ്ലോയ് ചെയ്യാം:
+
 
 * **Deploy to Bot-Hosting.net:**
   [![Deploy to Bot-Hosting](https://img.shields.io/badge/Bot--Hosting.net-Free%20Hosting-blue?style=for-the-badge&logo=discord)](https://bot-hosting.net/)
