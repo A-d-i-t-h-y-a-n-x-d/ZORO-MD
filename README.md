@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://ibb.co/9Hp01TWS" alt="ZORO-MD WhatsApp Bot Logo" width="200"/>
+  <img src="https://i.postimg.cc/TwgFg0V7/thumb.jpg" alt="ZORO-MD WhatsApp Bot Logo" width="200"/>
 </p>
 
 <h1 align="center">⚡ ZORO MD - Multi-Device WhatsApp Bot ⚡</h1>
