@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://i.imgur.com/your-image-link-here.jpg" alt="ZORO-MD WhatsApp Bot Logo" width="200"/>
+  <img src="https://ibb.co/9Hp01TWS" alt="ZORO-MD WhatsApp Bot Logo" width="200"/>
 </p>
 
 <h1 align="center">⚡ ZORO MD - Multi-Device WhatsApp Bot ⚡</h1>
@@ -27,8 +27,8 @@
 ## ✨ Key Features
 
 * 📥 **Social Media Downloader:** Download videos, audio, and photos from Instagram, YouTube, TikTok, Facebook, and Spotify.
-* 🤖 **Smart AI Integration:** Powered by ChatGPT and AI image generators for interactive responses.
-* 👥 **Advanced Group Management:** Auto-admin features, Kick/Add, Promote/Demote, Anti-Link, and Anti-Spam protection.
+* 🤖 **Smart AI Integration:** Integrated AI for smart conversations..
+* 👥 **Advanced Group Management:**  Kick/Add, Promote/Demote, Anti-Link, and Anti-Spam protection.
 * 🎨 **Sticker & Media Converter:** Instantly create WhatsApp stickers from images, videos, and GIFs.
 * 🎮 **Interactive Mini-Games:** Fun games, trivia, and quizzes for WhatsApp group engagement.
 * 🔐 **Privacy & Security:** Toggle between Public and Private modes easily.
