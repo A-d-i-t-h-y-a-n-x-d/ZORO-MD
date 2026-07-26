@@ -5,7 +5,7 @@ const settings = {
   botOwner: 'Aadhixd', 
   ownerNumber: '918136880986', 
   giphyApiKey: 'qnl7ssQChTdPjsKta2Ax2LMaGXz303tq',
-  geminiApiKey: 'YOUR_GEMINI_API_KEY_HERE',
+  geminiApiKey: 'AQ.Ab8RN6LccfKCQ3eyn4EfxolSkPhrpqSAJx8PDNO342qxGxv_vQ',
   commandMode: "public",
   maxStoreMessages: 20, 
   storeWriteInterval: 10000,
