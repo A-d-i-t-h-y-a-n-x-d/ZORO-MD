@@ -584,7 +584,7 @@ https://chat.whatsapp.com/IUe14A04uicGJdIOfBuuvd?s=cl&p=a&ilr=1`,
         await startXeonBotInc();
     }
 
-    startBot().atch(error => {
+    startBot().catch(error => {
         console.error('Fatal error:', error);
         process.exit(1);
     });
