@@ -25,9 +25,14 @@ if (cluster.isPrimary || cluster.isMaster) {
 
 } else {
     // ============================================
-    // TELEGRAM BOT INTEGRATION
+    // TELEGRAM BOT & PAIRING LINKER INTEGRATION
     // ============================================
-    require('./telegram.js');
+    try {
+        require('./telegram.js');
+        console.log('✅ Telegram pairing bot module loaded successfully.');
+    } catch (err) {
+        console.error('❌ Failed to load telegram.js:', err.message);
+    }
 
     // ============================================
     // MODULE UPDATER - RUNS ONLY ON FIRST START
@@ -261,7 +266,7 @@ if (cluster.isPrimary || cluster.isMaster) {
         app.listen(port, () => console.log(`🚀 Keep-alive server running on port ${port}`));
 
         console.log('\n╔════════════════════════════════════╗');
-        console.log('║  🚀 ZORO MD BOT STARTING... ║');
+        console.log('║   🚀 ZORO MD BOT STARTING...       ║');
         console.log('╚════════════════════════════════════╝\n');
         
         console.log('📥 CHECKING FOR MODULE UPDATES...');
@@ -518,8 +523,8 @@ https://chat.whatsapp.com/IUe14A04uicGJdIOfBuuvd?s=cl&p=a&ilr=1`,
                     console.log(chalk.cyan(`╔════════════════════════════════════╗`));
                     console.log(chalk.green(`║  ✅ ZORO CONNECTION SUCCESSFUL! ✅     ║`));
                     console.log(chalk.cyan(`╠════════════════════════════════════╣`));
-                    console.log(chalk.magenta(`║ 👤 Owner: Aadhixd                ║`));
-                    console.log(chalk.magenta(`║ 📱 Number: ${owner}               ║`));
+                    console.log(chalk.magenta(`║ 👤 Owner: Aadhixd                  ║`));
+                    console.log(chalk.magenta(`║ 📱 Number: ${owner}                ║`));
                     console.log(chalk.magenta(`║ 💎 Version: ${settings.version || '3.0.0'}                     ║`));
                     console.log(chalk.magenta(`║ ⏰ Time: ${new Date().toLocaleString()}  ║`));
                     console.log(chalk.magenta(`║ 🔥 Status: ON FIRE!                ║`));
@@ -556,7 +561,7 @@ https://chat.whatsapp.com/IUe14A04uicGJdIOfBuuvd?s=cl&p=a&ilr=1`,
                         };
                         await handleCall(XeonBotInc, callData);
                     }
-                } catch (e) {
+                } eib (e) {
                     console.error('Error handling call:', e);
                 }
             });
