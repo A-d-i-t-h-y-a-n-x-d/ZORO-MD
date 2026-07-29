@@ -37,7 +37,7 @@ bot.start((ctx) => {
             parse_mode: 'HTML',
             ...Markup.inlineKeyboard([
                 [Markup.button.callback(`${em.rocket} GET PAIRING CODE`, 'get_started')],
-                [Markup.button.url(`🌐 DEVELOPER / SUPPORT ${em.blackTick}`, 'https://t.me/Aadhixd')]
+                [Markup.button.url(`🌐 DEVELOPER / SUPPORT ${em.blackTick}`, 'https://t.me/Aadhixdofc')]
             ])
         }
     );
