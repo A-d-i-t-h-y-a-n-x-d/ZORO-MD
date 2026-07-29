@@ -13,7 +13,7 @@ if (!BOT_TOKEN) {
 
 const bot = new Telegraf(BOT_TOKEN);
 
-// Premium Emoji Shortcuts (HTML Format)
+// Premium Emoji helper configuration
 const em = {
     blueTick: '<emoji id="5334998226636390258">✔</emoji>',
     blackTick: '<emoji id="5251386049585768540">✔</emoji>',
@@ -22,9 +22,7 @@ const em = {
     key: '<emoji id="6136551252781172945">🔑</emoji>',
     indiaFlag: '<emoji id="6136551252781172945">🇮🇳</emoji>',
     errorEmoji: '<emoji id="5251437048027442994">❌</emoji>',
-    rocket: '<emoji id="5346042941196507141">🚀</emoji>',
-    money: '<emoji id="623336744778999509">💰</emoji>',
-    profile: '<emoji id="535286148951714456">👤</emoji>'
+    rocket: '<emoji id="5346042941196507141">🚀</emoji>'
 };
 
 // Start command
@@ -32,7 +30,7 @@ bot.start((ctx) => {
     ctx.reply(
         `✨ <b>WELCOME TO AADHI-XD ${em.blueTick} LINKER</b> ✨\n\n` +
         `Link your WhatsApp account securely with our advanced bot ${em.blueTick}.\n\n` +
-        `👉 <b>Please send your WhatsApp number with country code</b> (e.g., <code>918714387286</code>) to generate your pairing code.`,
+        `👉 <b>Please send your WhatsApp number with country code</b> (e.g., <code>918136880986</code>) to generate your pairing code.`,
         {
             parse_mode: 'HTML',
             ...Markup.inlineKeyboard([
@@ -48,7 +46,7 @@ bot.action('get_started', async (ctx) => {
     await ctx.reply(`📲 Please type and send your WhatsApp number now with country code ${em.whatsapp}:`, { parse_mode: 'HTML' });
 });
 
-// Handling Number and Pairing Code
+// Handling Number and Pairing Code Generation
 bot.on('text', async (ctx) => {
     let text = ctx.text.trim();
     if (text.startsWith('/')) return;
@@ -132,4 +130,4 @@ bot.action('copy_code', async (ctx) => {
 });
 
 bot.launch();
-console.log('🤖 AADHI-XD Linker Bot started successfully!');
+console.log('🤖 AADHI-XD Linker Bot started successfully with zero errors!');
