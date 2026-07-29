@@ -58,8 +58,8 @@ bot.start((ctx) => {
         {
             parse_mode: 'HTML',
             ...Markup.inlineKeyboard([
-                [Markup.button.callback(`🚀 GET PAIRING CODE`, 'get_started')],
-                [Markup.button.url(`🌐 DEVELOPER / SUPPORT`, 'https://t.me/Aadhixdofc')]
+                [Markup.button.callback('🚀 GET PAIRING CODE', 'get_started')],
+                [Markup.button.url('🌐 DEVELOPER / SUPPORT', 'https://t.me/Aadhixdofc')]
             ])
         }
     );
@@ -81,7 +81,7 @@ bot.on('text', async (ctx) => {
 
     const chatId = ctx.chat.id;
 
-    // Clean any prior dangling sessions for this Telegram user
+    // Clean any prior sessions
     cleanupUserSession(chatId);
 
     const waitMsg = await ctx.reply(`⏳ <b>Settings:</b> Initializing Baileys Socket...\n${em.phone} <b>Phone Number:</b> <code>${phoneNumber}</code>\n⏳ Generating Pairing Code... Please wait.`, { parse_mode: 'HTML' });
@@ -99,6 +99,7 @@ bot.on('text', async (ctx) => {
             version,
             logger: pino({ level: 'silent' }),
             printQRInTerminal: false,
+            browser: ["Ubuntu", "Chrome", "20.0.04"],
             auth: {
                 creds: state.creds,
                 keys: makeCacheableSignalKeyStore(state.keys, pino({ level: 'silent' }))
@@ -113,7 +114,6 @@ bot.on('text', async (ctx) => {
             const { connection, lastDisconnect } = update;
 
             if (connection === 'open') {
-                // index.js ഉപയോഗിക്കുന്ന പ്രധാന ./session ഫോൾഡറിലേക്ക് സെഷൻ ഫയലുകൾ കോപ്പി ചെയ്യുന്നു
                 try {
                     const mainSessionDir = path.join(__dirname, 'session');
                     if (!fs.existsSync(mainSessionDir)) {
@@ -139,9 +139,11 @@ bot.on('text', async (ctx) => {
         });
 
         if (!state.creds.registered) {
+            // Wait slightly for socket connection to establish before requesting code
             setTimeout(async () => {
                 try {
-                    const originalPairingCode = await sock.requestPairingCode(phoneNumber);
+                    const code = await sock.requestPairingCode(phoneNumber);
+                    const formattedCode = code?.match(/.{1,4}/g)?.join('-') || code;
                     
                     try { 
                         await ctx.telegram.deleteMessage(chatId, waitMsg.message_id); 
@@ -151,7 +153,7 @@ bot.on('text', async (ctx) => {
                         `┏━━ ${em.waLink} <b>WHATSAPP LINKING</b> ${em.indiaFlag} ${em.connected} ━━┓\n\n` +
                         `│ ${em.phone} <b>Phone Number:</b> <code>${phoneNumber}</code> ${em.blueTick}\n` +
                         `│ ${em.settings} <b>Settings:</b> Configured\n` +
-                        `│ ${em.pairingSuccess} <b>Pairing Code:</b> <code>${originalPairingCode}</code>\n\n` +
+                        `│ ${em.pairingSuccess} <b>Pairing Code:</b> <code>${formattedCode}</code>\n\n` +
                         `┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n` +
                         `📌 <b>Instructions:</b> ${em.generalFeature}\n` +
                         `1️⃣ Open WhatsApp on your phone\n` +
@@ -161,7 +163,7 @@ bot.on('text', async (ctx) => {
                         {
                             parse_mode: 'HTML',
                             ...Markup.inlineKeyboard([
-                                [Markup.button.callback(`📋 Copy Code: ${originalPairingCode}`, `copy_${originalPairingCode}`)],
+                                [Markup.button.callback(`📋 Copy Code: ${formattedCode}`, `copy_${formattedCode}`)],
                                 [Markup.button.callback('🔄 Change Number', 'get_started')]
                             ])
                         }
@@ -171,7 +173,7 @@ bot.on('text', async (ctx) => {
                     cleanupUserSession(chatId);
                     await ctx.reply(`${em.errorFormat} <b>Error generating pairing code. Please try again with a valid number.</b>`, { parse_mode: 'HTML' });
                 }
-            }, 3000);
+            }, 2000);
         }
 
     } catch (err) {
