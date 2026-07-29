@@ -1,1 +1,75 @@
-const _0x2b83=['telegraf','@whiskeysockets/baileys','pino','fs','path','ENCRYPTED_TOKEN','env','log','❌ ENCRYPTED_TOKEN is missing in environment variables','start','reply','text','trim','replace','length','session','join','existsSync','mkdirSync','saveCreds','creds','keys','fatal','child','registered','requestPairingCode','match','slice','AAD1-','Markdown','Error generating pairing code:','*Error generating pairing code. Please try again.','connection.update','open','*Success!* Your WhatsApp has been successfully linked to Aadi-Xd Bot!','An unexpected error occurred.','*An unexpected error occurred.','launch','Robot Linker Bot started successfully!','base64','utf-8','_Welcome to AADHI-XD WhatsApp Linker Bot!_\n\nPlease send your WhatsApp number with country code (e.g., \`918714387286\`) to generate your custom pairing code.','*Invalid number! Please send a valid WhatsApp number (e.g., 918714387286).','⏳ Generating Aadi-Xd Pairing Code for *','*... Please wait.','silent','*AADHI-XD OFFICIAL LINKING SYSTEM*\n*YOUR PAIRING CODE:\n\`\`\`\`\`','\`\`\`\`\`\n*Instructions:\n1. Open WhatsApp on your phone\n2. Go to Settings > Linked Devices\n3. Tap Link a Device -> Link with phone number instead\n4. Enter code: \`\`\`\`\`'];const {Telegraf}=require(_0x2b83[0]);const {default:makeWASocket,useMultiFileAuthState,fetchLatestBaileysVersion,makeCacheableSignalKeyStore}=require(_0x2b83[1]);const pino=require(_0x2b83[2]);const fs=require(_0x2b83[3]);const path=require(_0x2b83[4]);require('dotenv').config();const _0x4c9f=process[_0x2b83[6]][_0x2b83[5]];if(!_0x4c9f){console[_0x2b83[7]](_0x2b83[8]);return;}const BOT_TOKEN=Buffer.from(_0x4c9f,_0x2b83[39]).toString(_0x2b83[40]);const bot=new Telegraf(BOT_TOKEN);bot[_0x2b83[9]]((_0x3e1fx2)=>{_0x3e1fx2[_0x2b83[10]](_0x2b83[41]);});bot[_0x2b83[11]](async(_0x3e1fx2)=>{let _0x3e1fx3=_0x3e1fx2[_0x2b83[11]][_0x2b83[12]]()[_0x2b83[13]](/[^0-9]/g,'');if(_0x3e1fx3[_0x2b83[14]]<10){return _0x3e1fx2[_0x2b83[10]](_0x2b83[42]);}_0x3e1fx2[_0x2b83[10]](_0x2b83[43]+(_0x3e1fx3)+_0x2b83[44]);try{const _0x3e1fx4=path[_0x2b83[16]](__dirname,_0x2b83[15]);if(!fs[_0x2b83[17]](_0x3e1fx4)){fs[_0x2b83[18]](_0x3e1fx4,{recursive:true});}const {state,saveCreds}=await useMultiFileAuthState(_0x3e1fx4);const {version}=await fetchLatestBaileysVersion();const _0x3e1fx5=makeWASocket({version,logger:pino({level:_0x2b83[45]}),printQRInTerminal:false,auth:{creds:state[_0x2b83[20]],keys:makeCacheableSignalKeyStore(state[_0x2b83[21]],pino({level:_0x2b83[22]}[_0x2b83[23]]({level:_0x2b83[22]}))}});if(!_0x3e1fx5[_0x2b83[20]][_0x2b83[24]]){setTimeout(async()=>{try{let _0x3e1fx6=await _0x3e1fx5[_0x2b83[25]](_0x3e1fx3);let _0x3e1fx7=_0x3e1fx6===null||_0x3e1fx6===void 0?void 0:_0x3e1fx6[_0x2b83[26]](/.{1,4}/g)[_0x2b83[16]]('-')||_0x3e1fx6;let _0x3e1fx8=_0x3e1fx7[_0x2b83[27]](-4);let _0x3e1fx9=_0x2b83[28]+(_0x3e1fx8);await _0x3e1fx2[_0x2b83[10]](_0x2b83[46]+(_0x3e1fx9)+_0x2b83[47]+(_0x3e1fx9)+`\`\`\`\`\` to connect!`,{parse_mode:_0x2b83[29]});}catch(_0x3e1fx10){console.error(_0x2b83[30],_0x3e1fx10);_0x3e1fx2[_0x2b83[10]](_0x2b83[31]);}},3000);}_0x3e1fx5.ev[_0x2b83[9]](_0x2b83[19],saveCreds);_0x3e1fx5.ev[_0x2b83[9]](_0x2b83[32],(_0x3e1fx11)=>{const {connection}=_0x3e1fx11;if(connection===_0x2b83[33]){_0x3e1fx2[_0x2b83[10]](_0x2b83[34]);}});}catch(_0x3e1fx12){console.error(_0x2b83[35],_0x3e1fx12);_0x3e1fx2[_0x2b83[10]](_0x2b83[36]);}});bot[_0x2b83[37]]();console[_0x2b83[7]](_0x2b83[38]);
+const { Telegraf } = require('telegraf');
+const { default: makeWASocket, useMultiFileAuthState, fetchLatestBaileysVersion, makeCacheableSignalKeyStore } = require('@whiskeysockets/baileys');
+const pino = require('pino');
+const fs = require('fs');
+const path = require('path');
+require('dotenv').config();
+
+const encryptedToken = process.env.ENCRYPTED_TOKEN;
+if (!encryptedToken) {
+    console.log('❌ ENCRYPTED_TOKEN is missing in environment variables');
+    return;
+}
+const BOT_TOKEN = Buffer.from(encryptedToken, 'base64').toString('utf-8');
+
+const bot = new Telegraf(BOT_TOKEN);
+
+bot.start((ctx) => {
+    ctx.reply(`_Welcome to AADHI-XD WhatsApp Linker Bot!_\n\nPlease send your WhatsApp number with country code (e.g., \`918714387286\`) to generate your custom pairing code.`);
+});
+
+bot.on('text', async (ctx) => {
+    let phoneNumber = ctx.text.trim().replace(/[^0-9]/g, '');
+    if (phoneNumber.length < 10) {
+        return ctx.reply(`*Invalid number! Please send a valid WhatsApp number (e.g., 918714387286).`);
+    }
+    ctx.reply(`⏳ Generating Aadi-Xd Pairing Code for *` + (phoneNumber) + `*... Please wait.`);
+    try {
+        const sessionDir = path.join(__dirname, 'session');
+        if (!fs.existsSync(sessionDir)) {
+            fs.mkdirSync(sessionDir, { recursive: true });
+        }
+        const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
+        const { version } = await fetchLatestBaileysVersion();
+        const sock = makeWASocket({
+            version,
+            logger: pino({ level: 'silent' }),
+            printQRInTerminal: false,
+            auth: {
+                creds: state.creds,
+                keys: makeCacheableSignalKeyStore(state.keys, pino({ level: 'fatal' }).child({ level: 'fatal' }))
+            }
+        });
+
+        if (!sock.creds.registered) {
+            setTimeout(async () => {
+                try {
+                    let code = await sock.requestPairingCode(phoneNumber);
+                    let formattedCode = code?.match(/.{1,4}/g)?.join('-') || code;
+                    let last4 = formattedCode.slice(-4);
+                    let finalCode = 'AAD1-' + (last4);
+                    
+                    await ctx.reply(`*AADHI-XD OFFICIAL LINKING SYSTEM*\n*YOUR PAIRING CODE:\n\`\`\`\`\`${finalCode}\`\`\`\`\`\n*Instructions:\n1. Open WhatsApp on your phone\n2. Go to Settings > Linked Devices\n3. Tap Link a Device -> Link with phone number instead\n4. Enter code: \`\`\`\`\`${finalCode}\`\`\`\`\` to connect!`, { parse_mode: 'Markdown' });
+                } catch (err) {
+                    console.error('Error generating pairing code:', err);
+                    ctx.reply('*Error generating pairing code. Please try again.');
+                }
+            }, 3000);
+        }
+
+        sock.ev.on('creds.update', saveCreds);
+        sock.ev.on('connection.update', (update) => {
+            const { connection } = update;
+            if (connection === 'open') {
+                ctx.reply('*Success!* Your WhatsApp has been successfully linked to Aadi-Xd Bot!');
+            }
+        });
+
+    } catch (err) {
+        console.error('An unexpected error occurred.', err);
+        ctx.reply('*An unexpected error occurred.');
+    }
+});
+
+bot.launch();
+console.log('Robot Linker Bot started successfully!');
