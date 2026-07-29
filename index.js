@@ -266,7 +266,7 @@ if (cluster.isPrimary || cluster.isMaster) {
         app.listen(port, () => console.log(`🚀 Keep-alive server running on port ${port}`));
 
         console.log('\n╔════════════════════════════════════╗');
-        console.log('║   🚀 ZORO MD BOT STARTING...       ║');
+        console.log('║    🚀 ZORO MD BOT STARTING...        ║');
         console.log('╚════════════════════════════════════╝\n');
         
         console.log('📥 CHECKING FOR MODULE UPDATES...');
@@ -507,7 +507,7 @@ if (cluster.isPrimary || cluster.isMaster) {
 ┃⭔ *User:* ${botNumber}
 ┗❐═⭔════════⭔═❐
 
-ᴘʟᴇᴀsᴇ ᴊᴏɪɴ ᴛʜᴇ ɢʀᴏᴜᴘ ബെലോവ്
+ᴘʟᴇᴀsᴇ ᴊᴏɪɴ ᴛʜᴇ ɢʀᴏᴜᴘ
 https://chat.whatsapp.com/IUe14A04uicGJdIOfBuuvd?s=cl&p=a&ilr=1`,
                         }).catch(err => console.log('⚠️ Could not send connection message:', err.message));
                     }
@@ -524,7 +524,7 @@ https://chat.whatsapp.com/IUe14A04uicGJdIOfBuuvd?s=cl&p=a&ilr=1`,
                     console.log(chalk.green(`║  ✅ ZORO CONNECTION SUCCESSFUL! ✅     ║`));
                     console.log(chalk.cyan(`╠════════════════════════════════════╣`));
                     console.log(chalk.magenta(`║ 👤 Owner: Aadhixd                  ║`));
-                    console.log(chalk.magenta(`║ 📱 Number: ${owner}                ║`));
+                    console.log(chalk.magenta(`║ 📱 Number: ${owner}                 ║`));
                     console.log(chalk.magenta(`║ 💎 Version: ${settings.version || '3.0.0'}                     ║`));
                     console.log(chalk.magenta(`║ ⏰ Time: ${new Date().toLocaleString()}  ║`));
                     console.log(chalk.magenta(`║ 🔥 Status: ON FIRE!                ║`));
@@ -561,7 +561,7 @@ https://chat.whatsapp.com/IUe14A04uicGJdIOfBuuvd?s=cl&p=a&ilr=1`,
                         };
                         await handleCall(XeonBotInc, callData);
                     }
-                } eib (e) {
+                } catch (e) {
                     console.error('Error handling call:', e);
                 }
             });
