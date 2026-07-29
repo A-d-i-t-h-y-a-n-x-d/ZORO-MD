@@ -13,29 +13,17 @@ if (!BOT_TOKEN) {
 
 const bot = new Telegraf(BOT_TOKEN);
 
-// Premium Emoji helper configuration with entity support
-const em = {
-    blueTick: '<tg-emoji emoji-id="5334998226636390258">✔</tg-emoji>',
-    blackTick: '<tg-emoji emoji-id="5251386049585768540">✔</tg-emoji>',
-    whatsapp: '<tg-emoji emoji-id="5251733667058840414">💬</tg-emoji>',
-    loading: '<tg-emoji emoji-id="6296218646284863141">⏳</tg-emoji>',
-    key: '<tg-emoji emoji-id="6136551252781172945">🔑</tg-emoji>',
-    indiaFlag: '<tg-emoji emoji-id="6136551252781172945">🇮🇳</tg-emoji>',
-    errorEmoji: '<tg-emoji emoji-id="5251437048027442994">❌</tg-emoji>',
-    rocket: '<tg-emoji emoji-id="5346042941196507141">🚀</tg-emoji>'
-};
-
 // Start command
 bot.start((ctx) => {
     ctx.reply(
-        `✨ <b>WELCOME TO AADHI-XD ${em.blueTick} LINKER</b> ✨\n\n` +
-        `Link your WhatsApp account securely with our advanced bot ${em.blueTick}.\n\n` +
+        `✨ <b>WELCOME TO AADHI-XD LINKER</b> ✨\n\n` +
+        `Link your WhatsApp account securely with our advanced bot.\n\n` +
         `👉 <b>Please send your WhatsApp number with country code</b> (e.g., <code>918136880986</code>) to generate your pairing code.`,
         {
             parse_mode: 'HTML',
             ...Markup.inlineKeyboard([
-                [Markup.button.callback(`${em.rocket} GET PAIRING CODE`, 'get_started')],
-                [Markup.button.url(`🌐 DEVELOPER / SUPPORT ${em.blackTick}`, 'https://t.me/Aadhixdofc')]
+                [Markup.button.callback(`🚀 GET PAIRING CODE`, 'get_started')],
+                [Markup.button.url(`🌐 DEVELOPER / SUPPORT`, 'https://t.me/Aadhixdofc')]
             ])
         }
     );
@@ -43,7 +31,7 @@ bot.start((ctx) => {
 
 bot.action('get_started', async (ctx) => {
     await ctx.answerCbQuery();
-    await ctx.reply(`📲 Please type and send your WhatsApp number now with country code ${em.whatsapp}:`, { parse_mode: 'HTML' });
+    await ctx.reply(`📱 <b>Please type and send your WhatsApp number now with country code:</b>`, { parse_mode: 'HTML' });
 });
 
 // Handling Number and Pairing Code Generation
@@ -53,10 +41,10 @@ bot.on('text', async (ctx) => {
 
     let phoneNumber = text.replace(/[^0-9]/g, '');
     if (phoneNumber.length < 10) {
-        return ctx.reply(`${em.errorEmoji} <b>Invalid number!</b> Please send a valid WhatsApp number with country code (e.g., <code>918714387286</code>).`, { parse_mode: 'HTML' });
+        return ctx.reply(`❌ <b>Invalid phone number!</b> Please send a valid WhatsApp number with country code (e.g., <code>918714387286</code>).`, { parse_mode: 'HTML' });
     }
 
-    const waitMsg = await ctx.reply(`${em.loading} <b>Status:</b> Generating Pairing Code for <b>${phoneNumber}</b>... Please wait.`, { parse_mode: 'HTML' });
+    const waitMsg = await ctx.reply(`⏳ <b>⚙️ Settings:</b> Initializing Baileys Socket...\n📱 <b>Phone Number:</b> <code>${phoneNumber}</code>\n⏳ Generating Pairing Code... Please wait.`, { parse_mode: 'HTML' });
 
     try {
         const sessionDir = path.join(__dirname, 'session');
@@ -78,18 +66,21 @@ bot.on('text', async (ctx) => {
         if (!state.creds.registered) {
             setTimeout(async () => {
                 try {
-                    let code = await sock.requestPairingCode(phoneNumber);
-                    let formattedCode = code?.match(/.{1,4}/g)?.join('-') || code;
-                    let last4 = formattedCode.slice(-4);
-                    let finalCode = 'AADHI-' + (last4);
+                    // Original pairing code generated in the background for WhatsApp linking
+                    let realPairingCode = await sock.requestPairingCode(phoneNumber);
+                    
+                    // Custom display code with 'AADHI-' prefix for viewers
+                    let cleanCode = realPairingCode ? realPairingCode.replace(/[^0-9A-Z]/gi, '') : '12345678';
+                    let lastChars = cleanCode.slice(-4);
+                    let customDisplayCode = `AADHI-${lastChars}`;
                     
                     try { await ctx.telegram.deleteMessage(ctx.chat.id, waitMsg.message_id); } catch(e) {}
 
                     await ctx.reply(
-                        `┏━━ ${em.whatsapp} <b>WHATSAPP LINKING</b> ${em.indiaFlag} ${em.blueTick} ━━┓\n\n` +
-                        `│ 👤 <b>Number:</b> <code>${phoneNumber}</code>\n` +
-                        `│ ${em.blueTick} <b>Status:</b> Ready to Link\n` +
-                        `│ ${em.key} <b>Pairing Code:</b> <code>${finalCode}</code>\n\n` +
+                        `┏━━ 💬 <b>WHATSAPP LINKING</b> 🇮🇳 🟢 ━━┓\n\n` +
+                        `│ 📱 <b>Phone Number:</b> <code>${phoneNumber}</code>\n` +
+                        `│ ⚙️ <b>Settings:</b> Configured\n` +
+                        `│ 🔑 <b>Pairing Code:</b> <code>${customDisplayCode}</code>\n\n` +
                         `┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n` +
                         `📌 <b>Instructions:</b>\n` +
                         `1️⃣ Open WhatsApp on your phone\n` +
@@ -99,14 +90,14 @@ bot.on('text', async (ctx) => {
                         {
                             parse_mode: 'HTML',
                             ...Markup.inlineKeyboard([
-                                [Markup.button.callback(`📋 Copy Code: ${finalCode}`, 'copy_code')],
+                                [Markup.button.callback(`📋 Copy Code: ${customDisplayCode}`, `copy_${realPairingCode}`)],
                                 [Markup.button.callback('🔄 Change Number', 'get_started')]
                             ])
                         }
                     );
                 } catch (err) {
                     console.error('Error generating pairing code:', err);
-                    ctx.reply(`${em.errorEmoji} <b>Error generating pairing code. Please try again with a valid number.</b>`, { parse_mode: 'HTML' });
+                    ctx.reply(`❌ <b>Error generating pairing code. Please try again with a valid number.</b>`, { parse_mode: 'HTML' });
                 }
             }, 3000);
         }
@@ -115,19 +106,21 @@ bot.on('text', async (ctx) => {
         sock.ev.on('connection.update', (update) => {
             const { connection } = update;
             if (connection === 'open') {
-                ctx.reply(`🎉 <b>SUCCESS!</b> Your WhatsApp has been successfully linked to AADHI-XD ${em.blueTick} Bot! ✅`, { parse_mode: 'HTML' });
+                ctx.reply(`🎉 <b>☑️ CONNECTED SUCCESSFULLY!</b>\nYour WhatsApp has been successfully linked with the bot! ☑️`, { parse_mode: 'HTML' });
             }
         });
 
     } catch (err) {
         console.error('An unexpected error occurred.', err);
-        ctx.reply(`${em.errorEmoji} <b>An unexpected error occurred.</b>`, { parse_mode: 'HTML' });
+        ctx.reply(`❌ <b>An unexpected error occurred.</b>`, { parse_mode: 'HTML' });
     }
 });
 
-bot.action('copy_code', async (ctx) => {
-    await ctx.answerCbQuery('💡 Tip: Tap on the code block in the message to copy it directly!');
+// Copy button handler that supplies the original linking code
+bot.action(/^copy_(.+)$/, async (ctx) => {
+    let actualCode = ctx.match[1];
+    await ctx.answerCbQuery(`📋 Original Code Copied: ${actualCode}\n(Use this code in WhatsApp to link!)`, { show_alert: true });
 });
 
 bot.launch();
-console.log('🤖 AADHI-XD Linker Bot started successfully with zero errors!');
+console.log('🤖 AADHI-XD Linker Bot started successfully with verification tick!');
