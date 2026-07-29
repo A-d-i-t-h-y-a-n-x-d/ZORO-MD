@@ -25,6 +25,7 @@
     "fs-extra": "^11.2.0",
     "gtts": "^0.2.1",
     "human-readable": "^0.2.1",
+    "input": "^1.0.1",
     "jimp": "^1.6.0",
     "jsdom": "^22.1.0",
     "libphonenumber-js": "^1.11.18",
@@ -40,7 +41,7 @@
     "qrcode": "^1.5.4",
     "ruhend-scraper": "^8.3.0",
     "sharp": "^0.34.5",
-    "telegraf": "^4.16.3",
+    "telegram": "^2.26.21",
     "ws": "^8.17.1",
     "yt-search": "^2.12.1",
     "youtube-dl-exec": "^3.0.7"
