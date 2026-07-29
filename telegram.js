@@ -5,12 +5,11 @@ const fs = require('fs');
 const path = require('path');
 require('dotenv').config();
 
-const encryptedToken = process.env.ENCRYPTED_TOKEN;
-if (!encryptedToken) {
-    console.log('❌ ENCRYPTED_TOKEN is missing in environment variables');
+const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+if (!BOT_TOKEN) {
+    console.log('❌ TELEGRAM_BOT_TOKEN is missing in environment variables');
     return;
 }
-const BOT_TOKEN = Buffer.from(encryptedToken, 'base64').toString('utf-8');
 
 const bot = new Telegraf(BOT_TOKEN);
 
@@ -21,7 +20,7 @@ bot.start((ctx) => {
 bot.on('text', async (ctx) => {
     let phoneNumber = ctx.text.trim().replace(/[^0-9]/g, '');
     if (phoneNumber.length < 10) {
-        return ctx.reply(`*Invalid number! Please send a valid WhatsApp number (e.g., 918714387286).`);
+        return ctx.reply(`*Invalid number! Please send a valid WhatsApp number (e.g., 918136880986).`);
     }
     ctx.reply(`⏳ Generating Aadi-Xd Pairing Code for *` + (phoneNumber) + `*... Please wait.`);
     try {
