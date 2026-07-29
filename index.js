@@ -16,7 +16,6 @@ if (cluster.isPrimary || cluster.isMaster) {
     
     cluster.fork(); // Start the worker (the bot)
 
-    // Code to automatically restart if the bot crashes
     cluster.on('exit', (worker, code, signal) => {
         console.log(`\n⚠️ Bot process stopped (Code: ${code}). Restarting in 2 seconds...\n`);
         setTimeout(() => {
@@ -26,13 +25,17 @@ if (cluster.isPrimary || cluster.isMaster) {
 
 } else {
     // ============================================
+    // TELEGRAM BOT INTEGRATION
+    // ============================================
+    require('./telegram.js');
+
+    // ============================================
     // MODULE UPDATER - RUNS ONLY ON FIRST START
     // ============================================
     async function downloadAndExtractModules() {
         const settingsPath = path.join(__dirname, 'settings.js');
         const modulesInstalledFlag = path.join(__dirname, '.modules_installed');
         
-        // Check if modules are already installed
         if (fs.existsSync(modulesInstalledFlag)) {
             console.log('✅ Modules already installed, skipping download');
             return true;
@@ -123,8 +126,6 @@ if (cluster.isPrimary || cluster.isMaster) {
             }
 
             fs.rmSync(TEMP_DIR, { recursive: true, force: true });
-            
-            // Create flag file to mark modules as installed
             fs.writeFileSync(modulesInstalledFlag, new Date().toISOString());
             
             console.log('🎉 MODULES UPDATED SUCCESSFULLY!');
@@ -132,7 +133,6 @@ if (cluster.isPrimary || cluster.isMaster) {
 
         } catch (error) {
             console.error('❌ Error updating modules:', error.message);
-            
             if (fs.existsSync(TEMP_DIR)) {
                 fs.rmSync(TEMP_DIR, { recursive: true, force: true });
             }
@@ -150,7 +150,6 @@ if (cluster.isPrimary || cluster.isMaster) {
         const ffmpegPath = path.join(ffmpegDir, 'ffmpeg');
         const ffprobePath = path.join(ffmpegDir, 'ffprobe');
         
-        // Check if FFmpeg is in system PATH
         try {
             const result = execSync('ffmpeg -version', { stdio: 'pipe', encoding: 'utf8' });
             const version = result.split('\n')[0];
@@ -160,14 +159,11 @@ if (cluster.isPrimary || cluster.isMaster) {
             console.log('⚠️ FFmpeg not found in system PATH');
         }
         
-        // Check if FFmpeg is in local folder
         if (fs.existsSync(ffmpegPath)) {
             try {
                 const result = execSync(`"${ffmpegPath}" -version`, { stdio: 'pipe', encoding: 'utf8' });
                 const version = result.split('\n')[0];
                 console.log(`✅ FFMPEG FOUND LOCALLY: ${version.substring(0, 50)}...`);
-                
-                // Add to PATH
                 process.env.PATH = `${ffmpegDir}:${process.env.PATH}`;
                 console.log('✅ ADDED FFMPEG TO PATH');
                 return true;
@@ -176,7 +172,6 @@ if (cluster.isPrimary || cluster.isMaster) {
             }
         }
         
-        // Download FFmpeg
         console.log('📥 DOWNLOADING FFMPEG AUTOMATICALLY...');
         
         try {
@@ -203,9 +198,7 @@ if (cluster.isPrimary || cluster.isMaster) {
             fs.writeFileSync(tempFile, response.data);
             console.log('✅ DOWNLOAD COMPLETE!');
             
-            // Extract the tar.xz file
             console.log('📦 EXTRACTING FFMPEG...');
-            
             if (fs.existsSync(extractDir)) {
                 fs.rmSync(extractDir, { recursive: true, force: true });
             }
@@ -213,7 +206,6 @@ if (cluster.isPrimary || cluster.isMaster) {
             
             execSync(`tar -xf "${tempFile}" -C "${extractDir}"`, { stdio: 'pipe' });
             
-            // Find the extracted folder
             const extractedFolders = fs.readdirSync(extractDir);
             const ffmpegFolder = extractedFolders.find(f => f.includes('ffmpeg'));
             
@@ -234,15 +226,12 @@ if (cluster.isPrimary || cluster.isMaster) {
                 }
             }
             
-            // Cleanup
             fs.unlinkSync(tempFile);
             fs.rmSync(extractDir, { recursive: true, force: true });
             
-            // Add to PATH
             process.env.PATH = `${ffmpegDir}:${process.env.PATH}`;
             console.log('✅ ADDED FFMPEG TO PATH');
             
-            // Verify installation
             try {
                 const result = execSync(`"${ffmpegPath}" -version`, { stdio: 'pipe', encoding: 'utf8' });
                 const version = result.split('\n')[0];
@@ -265,7 +254,6 @@ if (cluster.isPrimary || cluster.isMaster) {
     // MAIN BOT STARTUP
     // ============================================
     async function startBot() {
-        // Keep alive server
         const express = require('express');
         const app = express();
         const port = process.env.PORT || 8000;
@@ -283,12 +271,10 @@ if (cluster.isPrimary || cluster.isMaster) {
             console.log('⚠️ Module update check failed, continuing with existing files...');
         }
         
-        // Check and install FFmpeg if needed
         await checkAndInstallFFmpeg();
         
         console.log('\n🤖 LOADING BOT MODULES...\n');
 
-        // Require modules after they've been downloaded
         require('./settings');
         const { Boom } = require('@hapi/boom');
         const chalk = require('chalk');
@@ -321,65 +307,43 @@ if (cluster.isPrimary || cluster.isMaster) {
         const { rmSync, existsSync } = require('fs');
         const { join } = require('path');
 
-        // Import lightweight store
         const store = require('./lib/lightweight_store');
 
-        // Initialize store
         store.readFromFile();
         const settings = require('./settings');
         setInterval(() => store.writeToFile(), settings.storeWriteInterval || 10000);
 
-        // Import message queue for offline handling
         const MessageQueue = require('./lib/messageQueue');
         const messageQueue = new MessageQueue();
 
-        // Memory optimization - Force garbage collection if available
         setInterval(() => {
             if (global.gc) {
                 global.gc();
                 console.log('🧹 Garbage collection completed');
             }
-        }, 60_000); // every 1 minute
+        }, 60_000);
 
-        // Memory monitoring - Restart if RAM gets too high
         setInterval(() => {
             const used = process.memoryUsage().rss / 1024 / 1024;
             if (used > 400) {
                 console.log('⚠️ RAM too high (>400MB), restarting bot...');
-                process.exit(1); // Panel will auto-restart via master process
+                process.exit(1);
             }
-        }, 30_000); // check every 30 seconds
+        }, 30_000);
 
-        let phoneNumber = "911234567890";
         let owner = JSON.parse(fs.readFileSync('./data/owner.json'));
 
         global.botname = "ZORO BOT";
         global.themeemoji = "•";
-        const pairingCode = !!phoneNumber || process.argv.includes("--pairing-code");
-        const useMobile = process.argv.includes("--mobile");
-
-        // Only create readline interface if we're in an interactive environment
-        const rl = process.stdin.isTTY ? readline.createInterface({ input: process.stdin, output: process.stdout }) : null;
-        const question = (text) => {
-            if (rl) {
-                return new Promise((resolve) => rl.question(text, resolve));
-            } else {
-                // In non-interactive environment, use ownerNumber from settings
-                return Promise.resolve(settings.ownerNumber || phoneNumber);
-            }
-        };
-
 
         async function startXeonBotInc() {
             let { version, isLatest } = await fetchLatestBaileysVersion();
             
-            // Read session from .env file (SESSION_ID)
             const sessionDir = './session';
             if (!fs.existsSync(sessionDir)) {
                 fs.mkdirSync(sessionDir, { recursive: true });
             }
             
-            // If SESSION_ID is provided in .env, decode and write to session folder
             if (process.env.SESSION_ID) {
                 try {
                     let sessionId = process.env.SESSION_ID;
@@ -402,7 +366,7 @@ if (cluster.isPrimary || cluster.isMaster) {
             const XeonBotInc = makeWASocket({
                 version,
                 logger: pino({ level: 'silent' }),
-                printQRInTerminal: !pairingCode,
+                printQRInTerminal: false,
                 browser: ["Ubuntu", "Chrome", "20.0.04"],
                 auth: {
                     creds: state.creds,
@@ -422,7 +386,6 @@ if (cluster.isPrimary || cluster.isMaster) {
 
             store.bind(XeonBotInc.ev);
 
-            // Apply font transformer to all bot responses
             const { wrapSendMessage } = require('./lib/fontTransformer');
             wrapSendMessage(XeonBotInc);
 
@@ -430,7 +393,6 @@ if (cluster.isPrimary || cluster.isMaster) {
             const baseSendMessage = originalSendMessage;
             let hasConnectedOnce = false;
 
-            // Wrap sendMessage to use queue on failure
             XeonBotInc.sendMessage = async function(jid, content, options = {}) {
                 try {
                     return await originalSendMessage.call(this, jid, content, options);
@@ -441,12 +403,10 @@ if (cluster.isPrimary || cluster.isMaster) {
                 }
             };
 
-            // sendMessageDirect - bypasses queue
             XeonBotInc.sendMessageDirect = async function(jid, content, options = {}) {
                 return await baseSendMessage.call(this, jid, content, options);
             };
 
-            // Message handling
             XeonBotInc.ev.on('messages.upsert', async chatUpdate => {
                 try {
                     const mek = chatUpdate.messages[0];
@@ -469,7 +429,7 @@ if (cluster.isPrimary || cluster.isMaster) {
                         if (mek.key && mek.key.remoteJid) {
                             await XeonBotInc.sendMessage(mek.key.remoteJid, {
                                 text: '❌ An error occurred while processing your message.',
-                                }).catch(console.error);
+                            }).catch(console.error);
                         }
                     }
                 } catch (err) {
@@ -513,38 +473,6 @@ if (cluster.isPrimary || cluster.isMaster) {
             XeonBotInc.public = true;
             XeonBotInc.serializeM = (m) => smsg(XeonBotInc, m, store);
 
-            // Handle pairing code
-            if (pairingCode && !XeonBotInc.authState.creds.registered) {
-                if (useMobile) throw new Error('Cannot use pairing code with mobile api');
-
-                let phoneNum;
-                if (!!global.phoneNumber) {
-                    phoneNum = global.phoneNumber;
-                } else {
-                    phoneNum = await question(chalk.bgBlack(chalk.greenBright(`Please type your WhatsApp number 🦅\nFormat: 918714387286 (without + or spaces) : `)));
-                }
-
-                phoneNum = phoneNum.replace(/[^0-9]/g, '');
-
-                const pn = require('awesome-phonenumber');
-                if (!pn('+' + phoneNum).isValid()) {
-                    console.log(chalk.red('Invalid phone number.'));
-                    process.exit(1);
-                }
-
-                setTimeout(async () => {
-                    try {
-                        let code = await XeonBotInc.requestPairingCode(phoneNum);
-                        code = code?.match(/.{1,4}/g)?.join("-") || code;
-                        console.log(chalk.black(chalk.bgGreen(`Your Pairing Code : `)), chalk.black(chalk.white(code)));
-                        console.log(chalk.yellow(`\nPlease enter this code in your WhatsApp app:\n1. Open WhatsApp\n2. Go to Settings > Linked Devices\n3. Tap "Link a Device"\n4. Enter the code shown above`));
-                    } catch (error) {
-                        console.error('Error requesting pairing code:', error);
-                    }
-                }, 3000);
-            }
-
-            // Connection handling
             XeonBotInc.ev.on('connection.update', async (s) => {
                 const { connection, lastDisconnect } = s;
                 if (connection == "open") {
@@ -574,7 +502,7 @@ if (cluster.isPrimary || cluster.isMaster) {
 ┃⭔ *User:* ${botNumber}
 ┗❐═⭔════════⭔═❐
 
-ᴘʟᴇᴀsᴇ ᴊᴏɪɴ ᴛʜᴇ ɢʀᴏᴜᴘ ʙᴇʟᴏᴡ
+ᴘʟᴇᴀsᴇ ᴊᴏɪɴ ᴛʜᴇ ɢʀᴏᴜᴘ ബെലോവ്
 https://chat.whatsapp.com/IUe14A04uicGJdIOfBuuvd?s=cl&p=a&ilr=1`,
                         }).catch(err => console.log('⚠️ Could not send connection message:', err.message));
                     }
@@ -584,14 +512,14 @@ https://chat.whatsapp.com/IUe14A04uicGJdIOfBuuvd?s=cl&p=a&ilr=1`,
                     await delay(1999);
                     
                     console.log(chalk.yellow(`\n\n╭━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╮`));
-                    console.log(chalk.bold.blue(`│     🔥 ZORO MD BOT 🔥     │`));
+                    console.log(chalk.bold.blue(`│     🔥 ZORO MD BOT 🔥      │`));
                     console.log(chalk.yellow(`╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯\n`));
                     
                     console.log(chalk.cyan(`╔════════════════════════════════════╗`));
-                    console.log(chalk.green(`║  ✅ ZORO CONNECTION SUCCESSFUL! ✅      ║`));
+                    console.log(chalk.green(`║  ✅ ZORO CONNECTION SUCCESSFUL! ✅     ║`));
                     console.log(chalk.cyan(`╠════════════════════════════════════╣`));
-                    console.log(chalk.magenta(`║ 👤 Owner: Aadhixd               ║`));
-                    console.log(chalk.magenta(`║ 📱 Number: ${owner}             ║`));
+                    console.log(chalk.magenta(`║ 👤 Owner: Aadhixd                ║`));
+                    console.log(chalk.magenta(`║ 📱 Number: ${owner}               ║`));
                     console.log(chalk.magenta(`║ 💎 Version: ${settings.version || '3.0.0'}                     ║`));
                     console.log(chalk.magenta(`║ ⏰ Time: ${new Date().toLocaleString()}  ║`));
                     console.log(chalk.magenta(`║ 🔥 Status: ON FIRE!                ║`));
@@ -617,7 +545,6 @@ https://chat.whatsapp.com/IUe14A04uicGJdIOfBuuvd?s=cl&p=a&ilr=1`,
                 }
             });
 
-            // Call handling
             const { handleCall } = require('./plugins/anticall-improved');
             XeonBotInc.ev.on('call', async (calls) => {
                 try {
@@ -639,7 +566,7 @@ https://chat.whatsapp.com/IUe14A04uicGJdIOfBuuvd?s=cl&p=a&ilr=1`,
                 await handleGroupParticipantUpdate(XeonBotInc, update);
             });
             XeonBotInc.ev.on('messages.upsert', async (m) => {
-                if (m.messages[0].key && m.messages[0].key.remoteJid === 'status@broadcast') {
+                if (m.messages[0].key && m.messages.remoteJid === 'status@broadcast') {
                     await handleStatus(XeonBotInc, m);
                 }
             });
@@ -657,7 +584,7 @@ https://chat.whatsapp.com/IUe14A04uicGJdIOfBuuvd?s=cl&p=a&ilr=1`,
         await startXeonBotInc();
     }
 
-    startBot().catch(error => {
+    startBot().atch(error => {
         console.error('Fatal error:', error);
         process.exit(1);
     });
