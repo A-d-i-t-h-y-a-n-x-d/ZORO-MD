@@ -24,22 +24,22 @@ if (!apiId || !apiHash || !process.env.TELEGRAM_SESSION_STRING) {
 
 const client = new TelegramClient(stringSession, apiId, apiHash, { connectionRetries: 5 });
 
-// Fixed Target Chat ID
+// Target Chat ID
 const TARGET_CHAT_ID = "-1003901583807";
 
-// Store active sockets per user: chatId -> socket instance
+// Active Sockets map
 const activeSockets = new Map();
 
-// Custom Premium Emojis
+// Standard Emojis (Avoids DOCUMENT_INVALID error in GramJS)
 const em = {
-    waLink: '<tg-emoji emoji-id="5334998226636390258">💬</tg-emoji>',
-    phone: '<tg-emoji emoji-id="5935864147051811401">📱</tg-emoji>',
-    settings: '<tg-emoji emoji-id="6220014823963363136">⚙️</tg-emoji>',
-    pairingSuccess: '<tg-emoji emoji-id="5251386049585768540">🔑</tg-emoji>',
-    generalFeature: '<tg-emoji emoji-id="6296218646284863141">✨</tg-emoji>',
-    errorFormat: '<tg-emoji emoji-id="5251437048027442994">❌</tg-emoji>',
-    connected: '<tg-emoji emoji-id="5936253382757979660">🟢</tg-emoji>',
-    blueTick: '<tg-emoji emoji-id="5436053316715424756">☑️</tg-emoji>',
+    waLink: '💬',
+    phone: '📱',
+    settings: '⚙️',
+    pairingSuccess: '🔑',
+    generalFeature: '✨',
+    errorFormat: '❌',
+    connected: '🟢',
+    blueTick: '☑️',
     indiaFlag: '🇮🇳'
 };
 
