@@ -13,16 +13,16 @@ if (!BOT_TOKEN) {
 
 const bot = new Telegraf(BOT_TOKEN);
 
-// Premium Emoji helper configuration
+// Premium Emoji helper configuration with entity support
 const em = {
-    blueTick: '<emoji id="5334998226636390258">✔</emoji>',
-    blackTick: '<emoji id="5251386049585768540">✔</emoji>',
-    whatsapp: '<emoji id="5251733667058840414">💬</emoji>',
-    loading: '<emoji id="6296218646284863141">⏳</emoji>',
-    key: '<emoji id="6136551252781172945">🔑</emoji>',
-    indiaFlag: '<emoji id="6136551252781172945">🇮🇳</emoji>',
-    errorEmoji: '<emoji id="5251437048027442994">❌</emoji>',
-    rocket: '<emoji id="5346042941196507141">🚀</emoji>'
+    blueTick: '<tg-emoji emoji-id="5334998226636390258">✔</tg-emoji>',
+    blackTick: '<tg-emoji emoji-id="5251386049585768540">✔</tg-emoji>',
+    whatsapp: '<tg-emoji emoji-id="5251733667058840414">💬</tg-emoji>',
+    loading: '<tg-emoji emoji-id="6296218646284863141">⏳</tg-emoji>',
+    key: '<tg-emoji emoji-id="6136551252781172945">🔑</tg-emoji>',
+    indiaFlag: '<tg-emoji emoji-id="6136551252781172945">🇮🇳</tg-emoji>',
+    errorEmoji: '<tg-emoji emoji-id="5251437048027442994">❌</tg-emoji>',
+    rocket: '<tg-emoji emoji-id="5346042941196507141">🚀</tg-emoji>'
 };
 
 // Start command
