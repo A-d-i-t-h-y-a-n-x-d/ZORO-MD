@@ -19,20 +19,20 @@ if (!BOT_TOKEN) {
 
 const bot = new Telegraf(BOT_TOKEN);
 
-// Store active sockets per user
+// Store active sockets per user: chatId -> socket instance
 const activeSockets = new Map();
 
-// Helper: Custom Emoji Generator Function (DOCUMENT_INVALID എറർ വരാതിരിക്കാൻ)
-const buildCustomEmojiText = (emojiId, fallbackChar) => {
-    return {
-        text: fallbackChar,
-        entity: {
-            offset: 0,
-            length: fallbackChar.length,
-            type: 'custom_emoji',
-            custom_emoji_id: emojiId
-        }
-    };
+// Custom Premium Emojis (HTML tg-emoji structure - EXACT ORIGINAL)
+const em = {
+    waLink: '<tg-emoji emoji-id="5334998226636390258">💬</tg-emoji>',
+    phone: '<tg-emoji emoji-id="5935864147051811401">📱</tg-emoji>',
+    settings: '<tg-emoji emoji-id="6220014823963363136">⚙️</tg-emoji>',
+    pairingSuccess: '<tg-emoji emoji-id="5251386049585768540">🔑</tg-emoji>',
+    generalFeature: '<tg-emoji emoji-id="6296218646284863141">✨</tg-emoji>',
+    errorFormat: '<tg-emoji emoji-id="5251437048027442994">❌</tg-emoji>',
+    connected: '<tg-emoji emoji-id="5936253382757979660">🟢</tg-emoji>',
+    blueTick: '<tg-emoji emoji-id="5436053316715424756">☑️</tg-emoji>',
+    indiaFlag: '🇮🇳'
 };
 
 // Helper: Clean up existing user socket & session files
@@ -51,20 +51,30 @@ const cleanupUserSession = (chatId) => {
 };
 
 bot.start((ctx) => {
-    ctx.reply(
-        `✨ WELCOME TO AADHI-XD LINKER ✨\n\n` +
+    ctx.telegram.sendMessage(
+        ctx.chat.id,
+        `${em.generalFeature} <b>WELCOME TO AADHI-XD LINKER</b> ${em.generalFeature}\n\n` +
         `Link your WhatsApp account securely with our advanced bot.\n\n` +
-        `👉 Please send your WhatsApp number with country code (e.g., 918136880986) to generate your pairing code.`,
-        Markup.inlineKeyboard([
-            [Markup.button.callback('🚀 GET PAIRING CODE', 'get_started')],
-            [Markup.button.url('🌐 DEVELOPER / SUPPORT', 'https://t.me/Aadhixdofc')]
-        ])
+        `👉 <b>Please send your WhatsApp number with country code</b> (e.g., <code>918136880986</code>) to generate your pairing code.`,
+        {
+            parse_mode: 'HTML',
+            reply_markup: {
+                inline_keyboard: [
+                    [{ text: '🚀 GET PAIRING CODE', callback_data: 'get_started' }],
+                    [{ text: '🌐 DEVELOPER / SUPPORT', url: 'https://t.me/Aadhixdofc' }]
+                ]
+            }
+        }
     );
 });
 
 bot.action('get_started', async (ctx) => {
     await ctx.answerCbQuery();
-    await ctx.reply(`📱 Please type and send your WhatsApp number now with country code:`);
+    await ctx.telegram.sendMessage(
+        ctx.chat.id,
+        `${em.phone} <b>Please type and send your WhatsApp number now with country code:</b>`, 
+        { parse_mode: 'HTML' }
+    );
 });
 
 bot.on('text', async (ctx) => {
@@ -73,13 +83,23 @@ bot.on('text', async (ctx) => {
 
     const phoneNumber = text.replace(/[^0-9]/g, '');
     if (phoneNumber.length < 10) {
-        return ctx.reply(`❌ Invalid phone number! Please send a valid WhatsApp number with country code.`);
+        return ctx.telegram.sendMessage(
+            ctx.chat.id,
+            `${em.errorFormat} <b>Invalid phone number!</b> Please send a valid WhatsApp number with country code (e.g., <code>918714387286</code>).`, 
+            { parse_mode: 'HTML' }
+        );
     }
 
     const chatId = ctx.chat.id;
+
+    // Clean any prior sessions
     cleanupUserSession(chatId);
 
-    const waitMsg = await ctx.reply(`⏳ Settings: Initializing Baileys Socket...\n📱 Phone Number: ${phoneNumber}\n⏳ Generating Pairing Code... Please wait.`);
+    const waitMsg = await ctx.telegram.sendMessage(
+        chatId,
+        `⏳ <b>Settings:</b> Initializing Baileys Socket...\n${em.phone} <b>Phone Number:</b> <code>${phoneNumber}</code>\n⏳ Generating Pairing Code... Please wait.`, 
+        { parse_mode: 'HTML' }
+    );
 
     try {
         const userSessionDir = path.join(__dirname, 'sessions', `user_${chatId}`);
@@ -94,69 +114,19 @@ bot.on('text', async (ctx) => {
             version,
             logger: pino({ level: 'silent' }),
             printQRInTerminal: false,
-            browser: ["Mac OS", "Chrome", "121.0.6167.85"],
+            browser: ["Ubuntu", "Chrome", "20.0.04"],
             auth: {
                 creds: state.creds,
                 keys: makeCacheableSignalKeyStore(state.keys, pino({ level: 'silent' }))
-            },
-            connectTimeoutMs: 60000,
-            defaultQueryTimeoutMs: 60000,
-            keepAliveIntervalMs: 25000
+            }
         });
 
         activeSockets.set(chatId, sock);
-        sock.ev.on('creds.update', saveCreds);
 
-        let codeRequested = false;
+        sock.ev.on('creds.update', saveCreds);
 
         sock.ev.on('connection.update', async (update) => {
             const { connection, lastDisconnect } = update;
-
-            if (!state.creds.registered && !codeRequested) {
-                codeRequested = true;
-
-                setTimeout(async () => {
-                    try {
-                        const code = await sock.requestPairingCode(phoneNumber);
-                        const formattedCode = code?.match(/.{1,4}/g)?.join('-') || code;
-
-                        try { 
-                            await ctx.telegram.deleteMessage(chatId, waitMsg.message_id); 
-                        } catch (e) {}
-
-                        // Safe HTML Formatting for Custom Emojis without Telegram 400 Bad Request
-                        const finalMessage = 
-                            `┏━━ <tg-emoji emoji-id="5334998226636390258">💬</tg-emoji> <b>WHATSAPP LINKING</b> 🇮🇳 <tg-emoji emoji-id="5936253382757979660">🟢</tg-emoji> ━━┓\n\n` +
-                            `│ <tg-emoji emoji-id="5935864147051811401">📱</tg-emoji> <b>Phone Number:</b> <code>${phoneNumber}</code> <tg-emoji emoji-id="5436053316715424756">☑️</tg-emoji>\n` +
-                            `│ <tg-emoji emoji-id="6220014823963363136">⚙️</tg-emoji> <b>Settings:</b> Configured\n` +
-                            `│ <tg-emoji emoji-id="5251386049585768540">🔑</tg-emoji> <b>Pairing Code:</b> <code>${formattedCode}</code>\n\n` +
-                            `┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n` +
-                            `📌 <b>Instructions:</b> <tg-emoji emoji-id="6296218646284863141">✨</tg-emoji>\n` +
-                            `1️⃣ Open WhatsApp on your phone\n` +
-                            `2️⃣ Go to <b>Settings > Linked Devices</b>\n` +
-                            `3️⃣ Tap <b>Link a Device</b> -> <b>Link with phone number instead</b>\n` +
-                            `4️⃣ Enter the code above to connect!`;
-
-                        const cleanCode = String(formattedCode).replace(/[^a-zA-Z0-9]/g, '');
-
-                        // Extra fallback parameter in extra object to bypass invalid document error
-                        await ctx.telegram.sendMessage(chatId, finalMessage, {
-                            parse_mode: 'HTML',
-                            reply_markup: {
-                                inline_keyboard: [
-                                    [{ text: `📋 Copy Code: ${formattedCode}`, callback_data: `copy_${cleanCode}` }],
-                                    [{ text: '🔄 Change Number', callback_data: 'get_started' }]
-                                ]
-                            }
-                        });
-
-                    } catch (err) {
-                        console.error('Error generating pairing code:', err);
-                        cleanupUserSession(chatId);
-                        await ctx.reply(`❌ Error generating pairing code. Please try again with a valid number.`);
-                    }
-                }, 3000);
-            }
 
             if (connection === 'open') {
                 try {
@@ -170,19 +140,76 @@ bot.on('text', async (ctx) => {
                     console.error('❌ Failed to copy session to main folder:', cpErr);
                 }
 
-                await ctx.reply(`🎉 CONNECTED SUCCESSFULLY! Your WhatsApp has been successfully linked!`);
+                await ctx.telegram.sendMessage(
+                    chatId,
+                    `🎉 <b>${em.connected} CONNECTED SUCCESSFULLY!</b> ${em.blueTick}\n` +
+                    `Your WhatsApp has been successfully linked! Modules extracting & starting bot... ${em.blueTick}`, 
+                    { parse_mode: 'HTML' }
+                );
             } else if (connection === 'close') {
                 const statusCode = lastDisconnect?.error?.output?.statusCode;
-                if (statusCode === DisconnectReason.loggedOut) {
-                    cleanupUserSession(chatId);
+                if (statusCode !== DisconnectReason.loggedOut) {
+                    // Reconnection logic
                 }
             }
         });
 
+        if (!state.creds.registered) {
+            setTimeout(async () => {
+                try {
+                    const code = await sock.requestPairingCode(phoneNumber);
+                    const formattedCode = code?.match(/.{1,4}/g)?.join('-') || code;
+                    
+                    try { 
+                        await ctx.telegram.deleteMessage(chatId, waitMsg.message_id); 
+                    } catch (e) {}
+
+                    // Message text formatting using HTML & Premium Emojis
+                    const textMessage = 
+                        `┏━━ ${em.waLink} <b>WHATSAPP LINKING</b> ${em.indiaFlag} ${em.connected} ━━┓\n\n` +
+                        `│ ${em.phone} <b>Phone Number:</b> <code>${phoneNumber}</code> ${em.blueTick}\n` +
+                        `│ ${em.settings} <b>Settings:</b> Configured\n` +
+                        `│ ${em.pairingSuccess} <b>Pairing Code:</b> <code>${formattedCode}</code>\n\n` +
+                        `┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n` +
+                        `📌 <b>Instructions:</b> ${em.generalFeature}\n` +
+                        `1️⃣ Open WhatsApp on your phone\n` +
+                        `2️⃣ Go to <b>Settings > Linked Devices</b>\n` +
+                        `3️⃣ Tap <b>Link a Device</b> -> <b>Link with phone number instead</b>\n` +
+                        `4️⃣ Enter the code above to connect!`;
+
+                    const cleanCode = String(formattedCode).replace(/[^a-zA-Z0-9]/g, '');
+
+                    // FIX: Direct telegram API messaging to bypass Markup serialization issue
+                    await ctx.telegram.sendMessage(chatId, textMessage, {
+                        parse_mode: 'HTML',
+                        reply_markup: {
+                            inline_keyboard: [
+                                [{ text: `📋 Copy Code: ${formattedCode}`, callback_data: `copy_${cleanCode}` }],
+                                [{ text: '🔄 Change Number', callback_data: 'get_started' }]
+                            ]
+                        }
+                    });
+
+                } catch (err) {
+                    console.error('Error generating pairing code:', err);
+                    cleanupUserSession(chatId);
+                    await ctx.telegram.sendMessage(
+                        chatId,
+                        `${em.errorFormat} <b>Error generating pairing code. Please try again with a valid number.</b>`, 
+                        { parse_mode: 'HTML' }
+                    );
+                }
+            }, 3000); // 3 seconds timeout for socket setup stability
+        }
+
     } catch (err) {
         console.error('An unexpected error occurred:', err);
         cleanupUserSession(chatId);
-        await ctx.reply(`❌ An unexpected error occurred.`);
+        await ctx.telegram.sendMessage(
+            chatId,
+            `${em.errorFormat} <b>An unexpected error occurred.</b>`, 
+            { parse_mode: 'HTML' }
+        );
     }
 });
 
@@ -195,5 +222,6 @@ bot.launch().then(() => {
     console.log('🤖 AADHI-XD Linker Telegram Module started successfully!');
 });
 
+// Enable graceful stop
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
