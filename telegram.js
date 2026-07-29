@@ -21,10 +21,13 @@ const em = {
     loading: '<emoji id="6296218646284863141">⏳</emoji>',
     key: '<emoji id="6136551252781172945">🔑</emoji>',
     indiaFlag: '<emoji id="6136551252781172945">🇮🇳</emoji>',
-    errorEmoji: '<emoji id="5251437048027442994">❌</emoji>'
+    errorEmoji: '<emoji id="5251437048027442994">❌</emoji>',
+    rocket: '<emoji id="5346042941196507141">🚀</emoji>',
+    money: '<emoji id="623336744778999509">💰</emoji>',
+    profile: '<emoji id="535286148951714456">👤</emoji>'
 };
 
-// /start command
+// Start command
 bot.start((ctx) => {
     ctx.reply(
         `✨ <b>WELCOME TO AADHI-XD ${em.blueTick} LINKER</b> ✨\n\n` +
@@ -33,7 +36,7 @@ bot.start((ctx) => {
         {
             parse_mode: 'HTML',
             ...Markup.inlineKeyboard([
-                [Markup.button.callback('⚡ GET PAIRING CODE', 'get_started')],
+                [Markup.button.callback(`${em.rocket} GET PAIRING CODE`, 'get_started')],
                 [Markup.button.url(`🌐 DEVELOPER / SUPPORT ${em.blackTick}`, 'https://t.me/Aadhixd')]
             ])
         }
@@ -80,7 +83,6 @@ bot.on('text', async (ctx) => {
                     let code = await sock.requestPairingCode(phoneNumber);
                     let formattedCode = code?.match(/.{1,4}/g)?.join('-') || code;
                     let last4 = formattedCode.slice(-4);
-                    // ഇവിടെ AAD1 എന്നുള്ളത് മാറ്റി AADHI എന്നാക്കിയിരിക്കുന്നു
                     let finalCode = 'AADHI-' + (last4);
                     
                     try { await ctx.telegram.deleteMessage(ctx.chat.id, waitMsg.message_id); } catch(e) {}
@@ -130,4 +132,4 @@ bot.action('copy_code', async (ctx) => {
 });
 
 bot.launch();
-console.log('🤖 AADHI-XD Linker Bot with HTML Premium Emojis started successfully!');
+console.log('🤖 AADHI-XD Linker Bot started successfully!');
