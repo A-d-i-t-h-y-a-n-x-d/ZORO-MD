@@ -18,22 +18,7 @@ if (!botToken) {
 }
 
 const bot = new Telegraf(botToken);
-
 const activeSockets = new Map();
-
-// Premium Emojis & Formatting Symbols
-const em = {
-    // Official Telegram Logo Premium Emoji (or Standard Fallback)
-    tgLogo: '<tg-emoji emoji-id="6278147703381723432">✈️</tg-emoji>', 
-    blueTick: '<tg-emoji emoji-id="5436053316715424756">☑️</tg-emoji>',
-    waLogo: '🟢',
-    phone: '📱',
-    settings: '⚙️',
-    keyEmoji: '🔑',
-    generalFeature: '✨',
-    errorFormat: '❌',
-    connected: '🟢'
-};
 
 const cleanupUserSession = (chatId) => {
     if (activeSockets.has(chatId)) {
@@ -50,13 +35,34 @@ const cleanupUserSession = (chatId) => {
 };
 
 bot.start(async (ctx) => {
-    // ഹെഡിംഗിന്റെ ആദ്യം ടെലഗ്രാം ലോഗോയും അവസാനത്തിൽ വെരിഫൈഡ് ടിക്കും നൽകിയിട്ടുണ്ട്
-    const welcomeText = `${em.tgLogo} <b>WELCOME TO AADHI-XD LINKER</b> ${em.blueTick}\n\n` +
-                        `Link your WhatsApp account securely with our bot.\n\n` +
-                        `👉 <b>Please send your WhatsApp number with country code</b> (e.g., <code>918136880986</code>) to generate your pairing code.`;
+    // Welcome Message Text
+    const text = "✈️ WELCOME TO AADHI-XD LINKER ☑️\n\n" +
+                 "Link your WhatsApp account securely with our bot.\n\n" +
+                 "👉 Please send your WhatsApp number with country code (e.g., 918136880986) to generate your pairing code.";
 
-    await ctx.replyWithHTML(welcomeText, {
-        parse_mode: 'HTML',
+    // Message Entities വഴി കസ്റ്റം പ്രീമിയം ഇമോജികൾ സെറ്റ് ചെയ്യുന്നു
+    const entities = [
+        {
+            offset: 0,
+            length: 2, // '✈️'
+            type: 'custom_emoji',
+            custom_emoji_id: '6278147703381723432' // Telegram Premium Logo
+        },
+        {
+            offset: 3,
+            length: 27, // 'WELCOME TO AADHI-XD LINKER'
+            type: 'bold'
+        },
+        {
+            offset: 31,
+            length: 2, // '☑️'
+            type: 'custom_emoji',
+            custom_emoji_id: '5436053316715424756' // Blue Verified Tick
+        }
+    ];
+
+    await ctx.telegram.sendMessage(ctx.chat.id, text, {
+        entities: entities,
         ...Markup.inlineKeyboard([
             [Markup.button.callback('🚀 GET PAIRING CODE', 'get_started')],
             [Markup.button.url('🌐 DEVELOPER / SUPPORT', 'https://t.me/Aadhixdofc')]
@@ -66,7 +72,7 @@ bot.start(async (ctx) => {
 
 bot.action('get_started', async (ctx) => {
     await ctx.answerCbQuery('Starting process...');
-    await ctx.replyWithHTML(`${em.waLogo} <b>Please type and send your WhatsApp number now with country code:</b>`, { parse_mode: 'HTML' });
+    await ctx.replyWithHTML("🟢 <b>Please type and send your WhatsApp number now with country code:</b>");
 });
 
 bot.on('text', async (ctx) => {
@@ -77,12 +83,12 @@ bot.on('text', async (ctx) => {
 
     const phoneNumber = text.replace(/[^0-9]/g, '');
     if (phoneNumber.length < 10) {
-        return ctx.replyWithHTML(`${em.errorFormat} <b>Invalid phone number!</b> Please send a valid WhatsApp number with country code (e.g., <code>918714387286</code>).`, { parse_mode: 'HTML' });
+        return ctx.replyWithHTML("❌ <b>Invalid phone number!</b> Please send a valid WhatsApp number with country code (e.g., <code>918714387286</code>).");
     }
 
     cleanupUserSession(chatId);
 
-    const waitMsg = await ctx.replyWithHTML(`⏳ <b>Settings:</b> Initializing Baileys Socket...\n${em.waLogo} <b>Phone Number:</b> <code>${phoneNumber}</code>\n⏳ Generating Pairing Code... Please wait.`, { parse_mode: 'HTML' });
+    const waitMsg = await ctx.replyWithHTML(`⏳ <b>Settings:</b> Initializing Baileys Socket...\n🟢 <b>Phone Number:</b> <code>${phoneNumber}</code>\n⏳ Generating Pairing Code... Please wait.`);
 
     try {
         const userSessionDir = path.join(__dirname, 'sessions', `user_${chatId}`);
@@ -128,7 +134,7 @@ bot.on('text', async (ctx) => {
                     console.error('❌ Failed to copy session to main folder:', cpErr);
                 }
 
-                await ctx.replyWithHTML(`🎉 <b>PAIRING SUCCESSFUL!</b> ${em.connected}\n\nYour WhatsApp has been successfully linked and verified! ${em.blueTick}`, { parse_mode: 'HTML' });
+                await ctx.replyWithHTML("🎉 <b>PAIRING SUCCESSFUL!</b> 🟢\n\nYour WhatsApp has been successfully linked and verified!");
             }
         });
 
@@ -141,12 +147,12 @@ bot.on('text', async (ctx) => {
                     try { await ctx.deleteMessage(waitMsg.message_id); } catch (e) {}
 
                     const textMessage = 
-                        `┏━━ ${em.waLogo} <b>AADHI XD LINKING</b> ${em.blueTick} ━━┓\n\n` +
-                        `│ ${em.phone} <b>Phone Number:</b> <code>${phoneNumber}</code> ${em.blueTick}\n` +
-                        `│ ${em.settings} <b>Settings:</b> Configured\n` +
-                        `│ ${em.keyEmoji} <b>Pairing Code:</b> <code>${formattedCode}</code>\n\n` +
+                        `┏━━ 🟢 <b>AADHI XD LINKING</b> ━━┓\n\n` +
+                        `│ 📱 <b>Phone Number:</b> <code>${phoneNumber}</code>\n` +
+                        `│ ⚙️ <b>Settings:</b> Configured\n` +
+                        `│ 🔑 <b>Pairing Code:</b> <code>${formattedCode}</code>\n\n` +
                         `┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n` +
-                        `📌 <b>Instructions:</b> ${em.generalFeature}\n` +
+                        `📌 <b>Instructions:</b> ✨\n` +
                         `1️⃣ Open WhatsApp on your phone\n` +
                         `2️⃣ Go to <b>Settings > Linked Devices</b>\n` +
                         `3️⃣ Tap <b>Link a Device</b> -> <b>Link with phone number instead</b>\n` +
@@ -154,18 +160,15 @@ bot.on('text', async (ctx) => {
 
                     const cleanCode = String(formattedCode).replace(/[^a-zA-Z0-9]/g, '');
 
-                    await ctx.replyWithHTML(textMessage, {
-                        parse_mode: 'HTML',
-                        ...Markup.inlineKeyboard([
-                            [Markup.button.callback(`📋 Copy Code: ${formattedCode}`, `copy_${cleanCode}`)],
-                            [Markup.button.callback('🔄 Change Number', 'get_started')]
-                        ])
-                    });
+                    await ctx.replyWithHTML(textMessage, Markup.inlineKeyboard([
+                        [Markup.button.callback(`📋 Copy Code: ${formattedCode}`, `copy_${cleanCode}`)],
+                        [Markup.button.callback('🔄 Change Number', 'get_started')]
+                    ]));
 
                 } catch (err) {
                     console.error('Error generating pairing code:', err);
                     cleanupUserSession(chatId);
-                    await ctx.replyWithHTML(`${em.errorFormat} <b>Error generating pairing code. Please try again with a valid number.</b>`, { parse_mode: 'HTML' });
+                    await ctx.replyWithHTML("❌ <b>Error generating pairing code. Please try again with a valid number.</b>");
                 }
             }, 2000);
         }
@@ -173,7 +176,7 @@ bot.on('text', async (ctx) => {
     } catch (err) {
         console.error('An unexpected error occurred:', err);
         cleanupUserSession(chatId);
-        await ctx.replyWithHTML(`${em.errorFormat} <b>An unexpected error occurred.</b>`, { parse_mode: 'HTML' });
+        await ctx.replyWithHTML("❌ <b>An unexpected error occurred.</b>");
     }
 });
 
