@@ -13,18 +13,18 @@ if (!TELEGRAM_TOKEN) {
 
 const bot = new Telegraf(TELEGRAM_TOKEN);
 
-// Python Engine പോലെ പെർഫെക്റ്റ് ആനിമേഷൻ കിട്ടാനുള്ള ഇമോജി ടാഗ്
+// Premium Animated Custom Emoji Helper Function
 const emoji = (id, symbol = "⚡") => `<tg-emoji emoji-id="${id}">${symbol}</tg-emoji>`;
 
 // Command: /start
 bot.start((ctx) => {
     const welcomeText = 
-        `${emoji("5251671733630431622", "👑")} <b>ZORO MD WHATSAPP PAIRCODE GENERATOR</b>\n\n` +
-        `${emoji("5251733667058840414", "✨")} Welcome to Aadhixd WhatsApp Paircode Generator!\n\n` +
+        `${emoji("5251733667058840414", "✔️")} <b>ZORO MD WHATSAPP PAIRCODE GENERATOR</b>\n\n` +
+        `${emoji("5936079934798696466", "💬")} Welcome to Aadhixd WhatsApp Paircode Generator!\n\n` +
         `${emoji("5935864147051811401", "⚠️")} How to pair your device:\n` +
         `Send your phone number with country code:\n` +
         `<code>/pair 918136880986</code>\n\n` +
-        `${emoji("5251733667058840414", "✨")} Powered by Aadhixd System\n\n` +
+        `Powered by Aadhixd System ${emoji("5251733667058840414", "✔️")}\n\n` +
         `${emoji("5935888993437619556", "👨‍💻")} Developer Support\n` +
         `${emoji("5251386049585768540", "📢")} Official Telegram`;
 
@@ -56,10 +56,10 @@ bot.command('pair', async (ctx) => {
             const cleanCode = rawCode.replace(/-/g, '');
 
             const successText = 
-                `${emoji("5936079934798696466", "🔥")} <b>AADHIXD PAIRCODE GENERATED</b>\n\n` +
+                `${emoji("5936079934798696466", "💬")} <b>AADHIXD PAIRCODE GENERATED</b>\n\n` +
                 `YOUR CODE: <code>${rawCode}</code>\n\n` +
                 `Steps to link:\n` +
-                `1. ${emoji("5936079934798696466", "📱")} Open WhatsApp > ${emoji("5933521976831251008", "⚙️")} Settings > Linked Devices.\n` +
+                `1. ${emoji("5936079934798696466", "💬")} Open WhatsApp > ${emoji("5933521976831251008", "⚙️")} Settings > Linked Devices.\n` +
                 `2. Tap Link a Device > Link with phone number.\n` +
                 `3. Enter the pairing code above.\n\n` +
                 `Bot will auto activate after verification!\n\n` +
