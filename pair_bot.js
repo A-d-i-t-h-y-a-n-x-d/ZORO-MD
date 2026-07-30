@@ -40,7 +40,7 @@ bot.command('pair', async (ctx) => {
     const args = text.split(/\s+/);
 
     if (args.length < 2) {
-        const warnText = `${emoji("5935864147051811401", "⚠️")} Please provide your phone number!\nUsage: <code>/pair 918714387286</code>`;
+        const warnText = `${emoji("5935864147051811401", "⚠️")} Please provide your phone number!\nUsage: <code>/pair 918136880986</code>`;
         return ctx.replyWithHTML(warnText);
     }
 
