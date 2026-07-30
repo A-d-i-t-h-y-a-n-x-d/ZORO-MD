@@ -23,11 +23,12 @@ const activeSockets = new Map();
 
 // Custom Premium Emoji Mapping
 const em = {
-    waLogo: '<tg-emoji emoji-id="5936079934798696466">🟢</tg-emoji>',
-    blueTick: '<tg-emoji emoji-id="5436053316715424756">☑️</tg-emoji>',
+    welcomeHeaderEmoji: '<tg-emoji emoji-id="6298356878573307709">✨</tg-emoji>', // പുതിയ പ്രീമിയം ഇമോജി
+    waLogo: '<tg-emoji emoji-id="5936079934798696466">🟢</tg-emoji>', // വാട്സാപ്പ് ലോഗോ
+    blueTick: '<tg-emoji emoji-id="5436053316715424756">☑️</tg-emoji>', // ബ്ലൂ വെരിഫിക്കേഷൻ ബാഡ്ജ്
     phone: '<tg-emoji emoji-id="5936079934798696466">📱</tg-emoji>',
     settings: '<tg-emoji emoji-id="5933521976831251008">⚙️</tg-emoji>',
-    keyEmoji: '<tg-emoji emoji-id="5251386049585768540">🔑</tg-emoji>',
+    keyEmoji: '🔑',
     generalFeature: '✨',
     errorFormat: '❌',
     connected: '🟢'
@@ -48,7 +49,8 @@ const cleanupUserSession = (chatId) => {
 };
 
 bot.start(async (ctx) => {
-    const welcomeText = `${em.generalFeature} <b>WELCOME TO AADHI-XD LINKER</b> ${em.generalFeature}\n\n` +
+    // വെൽക്കം മെസ്സേജിന്റെ ഹെഡിംഗ് അപ്ഡേറ്റ് ചെയ്തു
+    const welcomeText = `${em.welcomeHeaderEmoji} <b>WELCOME TO AADHI-XD LINKER</b> ${em.blueTick}\n\n` +
                         `Link your WhatsApp account securely with our bot.\n\n` +
                         `👉 <b>Please send your WhatsApp number with country code</b> (e.g., <code>918136880986</code>) to generate your pairing code.`;
 
@@ -60,7 +62,8 @@ bot.start(async (ctx) => {
 
 bot.action('get_started', async (ctx) => {
     await ctx.answerCbQuery('Starting process...');
-    await ctx.replyWithHTML(`${em.phone} <b>Please type and send your WhatsApp number now with country code:</b>`);
+    // ഫോൺ ഐക്കണിന് പകരം വാട്സാപ്പ് ലോഗോ മാറ്റി
+    await ctx.replyWithHTML(`${em.waLogo} <b>Please type and send your WhatsApp number now with country code:</b>`);
 });
 
 bot.on('text', async (ctx) => {
@@ -76,7 +79,7 @@ bot.on('text', async (ctx) => {
 
     cleanupUserSession(chatId);
 
-    const waitMsg = await ctx.replyWithHTML(`⏳ <b>Settings:</b> Initializing Baileys Socket...\n${em.phone} <b>Phone Number:</b> <code>${phoneNumber}</code>\n⏳ Generating Pairing Code... Please wait.`);
+    const waitMsg = await ctx.replyWithHTML(`⏳ <b>Settings:</b> Initializing Baileys Socket...\n${em.waLogo} <b>Phone Number:</b> <code>${phoneNumber}</code>\n⏳ Generating Pairing Code... Please wait.`);
 
     try {
         const userSessionDir = path.join(__dirname, 'sessions', `user_${chatId}`);
@@ -87,12 +90,11 @@ bot.on('text', async (ctx) => {
         const { state, saveCreds } = await useMultiFileAuthState(userSessionDir);
         const { version } = await fetchLatestBaileysVersion();
 
-        // Optimized WASocket settings for ultra-fast pairing & login
         const sock = makeWASocket({
             version,
             logger: pino({ level: 'silent' }),
             printQRInTerminal: false,
-            browser: ["Mac OS", "Chrome", "121.0.0"], // Updated Browser Ident for faster link
+            browser: ["Mac OS", "Chrome", "121.0.0"],
             auth: {
                 creds: state.creds,
                 keys: makeCacheableSignalKeyStore(state.keys, pino({ level: 'silent' }))
@@ -100,7 +102,7 @@ bot.on('text', async (ctx) => {
             connectTimeoutMs: 60000,
             defaultQueryTimeoutMs: 0,
             keepAliveIntervalMs: 10000,
-            syncFullHistory: false, // Prevents loading heavy chat history (fixes infinity loading)
+            syncFullHistory: false,
             markOnlineOnConnect: true
         });
 
