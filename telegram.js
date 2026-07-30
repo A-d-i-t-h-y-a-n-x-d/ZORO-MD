@@ -20,7 +20,7 @@ if (!botToken) {
 const bot = new Telegraf(botToken);
 const activeSockets = new Map();
 
-// Emoji definitions
+// Custom/Premium Emoji definitions with fallback support
 const em = {
     tgLogo: '<tg-emoji emoji-id="6278147703381723432">✈️</tg-emoji>',
     waLogo: '<tg-emoji emoji-id="5936079934798696466">🟢</tg-emoji>',
@@ -48,22 +48,22 @@ const cleanupUserSession = (chatId) => {
 };
 
 bot.start(async (ctx) => {
-    const welcomeText = `${em.tgLogo} <b>WELCOME TO AADHI-XD LINKER</b>\n\n` +
+    // Added ${em.blueTick} right next to AADHI-XD LINKER
+    const welcomeText = `${em.tgLogo} <b>WELCOME TO AADHI-XD LINKER</b> ${em.blueTick}\n\n` +
                         `Link your WhatsApp account securely with our bot.\n\n` +
                         `👉 <b>Please send your WhatsApp number with country code</b> (e.g., <code>918136880986</code>) to generate your pairing code.`;
 
-    await ctx.replyWithHTML(welcomeText, {
-        parse_mode: 'HTML',
-        ...Markup.inlineKeyboard([
-            [Markup.button.callback('🚀 GET PAIRING CODE', 'get_started')],
-            [Markup.button.url('🌐 DEVELOPER / SUPPORT', 'https://t.me/Aadhixdofc')]
-        ])
-    });
+    await ctx.replyWithHTML(welcomeText, Markup.inlineKeyboard([
+        [Markup.button.callback('🚀 GET PAIRING CODE', 'get_started')],
+        [Markup.button.url('🌐 DEVELOPER / SUPPORT', 'https://t.me/Aadhixdofc')]
+    ]));
 });
 
 bot.action('get_started', async (ctx) => {
-    await ctx.answerCbQuery('Starting process...');
-    await ctx.replyWithHTML(`${em.waLogo} <b>Please type and send your WhatsApp number now with country code:</b>`, { parse_mode: 'HTML' });
+    try {
+        await ctx.answerCbQuery('Starting process...');
+    } catch (e) {}
+    await ctx.replyWithHTML(`${em.waLogo} <b>Please type and send your WhatsApp number now with country code:</b>`);
 });
 
 bot.on('text', async (ctx) => {
@@ -74,12 +74,12 @@ bot.on('text', async (ctx) => {
 
     const phoneNumber = text.replace(/[^0-9]/g, '');
     if (phoneNumber.length < 10) {
-        return ctx.replyWithHTML(`${em.errorFormat} <b>Invalid phone number!</b> Please send a valid WhatsApp number with country code.`, { parse_mode: 'HTML' });
+        return ctx.replyWithHTML(`${em.errorFormat} <b>Invalid phone number!</b> Please send a valid WhatsApp number with country code.`);
     }
 
     cleanupUserSession(chatId);
 
-    const waitMsg = await ctx.replyWithHTML(`⏳ <b>Settings:</b> Initializing Socket...\n${em.waLogo} <b>Phone Number:</b> <code>${phoneNumber}</code>\n⏳ Generating Pairing Code... Please wait.`, { parse_mode: 'HTML' });
+    const waitMsg = await ctx.replyWithHTML(`⏳ <b>Settings:</b> Initializing Socket...\n${em.waLogo} <b>Phone Number:</b> <code>${phoneNumber}</code>\n⏳ Generating Pairing Code... Please wait.`);
 
     try {
         const userSessionDir = path.join(__dirname, 'sessions', `user_${chatId}`);
@@ -90,21 +90,27 @@ bot.on('text', async (ctx) => {
         const { state, saveCreds } = await useMultiFileAuthState(userSessionDir);
         const { version } = await fetchLatestBaileysVersion();
 
+        // High-performance, instant-linking socket settings
         const sock = makeWASocket({
             version,
-            logger: pino({ level: 'silent' }),
+            logger: pino({ level: 'fatal' }),
             printQRInTerminal: false,
-            browser: ["Mac OS", "Chrome", "121.0.0"],
+            browser: ["Ubuntu", "Chrome", "20.0.04"],
             auth: {
                 creds: state.creds,
-                keys: makeCacheableSignalKeyStore(state.keys, pino({ level: 'silent' }))
+                keys: makeCacheableSignalKeyStore(state.keys, pino({ level: 'fatal' }))
             },
-            connectTimeoutMs: 60000,
+            connectTimeoutMs: 30000,
             defaultQueryTimeoutMs: 0,
             keepAliveIntervalMs: 10000,
+            
+            // Disable history downloading to bypass login loading lag
             syncFullHistory: false,
-            markOnlineOnConnect: true,
-            generateHighQualityLinkPreview: false
+            fireInitQueries: false, 
+            downloadHistory: false,
+            markOnlineOnConnect: false,
+            generateHighQualityLinkPreview: false,
+            shouldSyncHistoryMessage: () => false
         });
 
         activeSockets.set(chatId, sock);
@@ -116,15 +122,19 @@ bot.on('text', async (ctx) => {
 
             if (connection === 'open') {
                 try {
-                    // Save session instantly upon login
+                    console.log(`✅ Session successfully linked for user ${chatId}`);
+
                     const mainSessionDir = path.join(__dirname, 'session');
                     if (!fs.existsSync(mainSessionDir)) {
                         fs.mkdirSync(mainSessionDir, { recursive: true });
                     }
                     fs.cpSync(userSessionDir, mainSessionDir, { recursive: true, force: true });
-                    console.log(`✅ Session successfully created & saved for user ${chatId}`);
 
-                    await ctx.replyWithHTML(`🎉 <b>PAIRING SUCCESSFUL!</b> ${em.connected}\n\nYour WhatsApp has been successfully linked! ${em.blueTick}`, { parse_mode: 'HTML' });
+                    await ctx.replyWithHTML(
+                        `🎉 <b>PAIRING SUCCESSFUL!</b> ${em.connected}\n\n` +
+                        `Your WhatsApp has been instantly linked and connected to the bot! ${em.blueTick}`
+                    );
+
                 } catch (cpErr) {
                     console.error('❌ Failed to save session:', cpErr);
                 }
@@ -133,7 +143,7 @@ bot.on('text', async (ctx) => {
             if (connection === 'close') {
                 const statusCode = lastDisconnect?.error?.output?.statusCode;
                 if (statusCode !== 401) {
-                    console.log('Connection closed, cleaning up...');
+                    console.log(`Connection closed for ${chatId}, cleaning up...`);
                 }
             }
         });
@@ -160,18 +170,15 @@ bot.on('text', async (ctx) => {
 
                     const cleanCode = String(formattedCode).replace(/[^a-zA-Z0-9]/g, '');
 
-                    await ctx.replyWithHTML(textMessage, {
-                        parse_mode: 'HTML',
-                        ...Markup.inlineKeyboard([
-                            [Markup.button.callback(`📋 Copy Code: ${formattedCode}`, `copy_${cleanCode}`)],
-                            [Markup.button.callback('🔄 Change Number', 'get_started')]
-                        ])
-                    });
+                    await ctx.replyWithHTML(textMessage, Markup.inlineKeyboard([
+                        [Markup.button.callback(`📋 Copy Code: ${formattedCode}`, `copy_${cleanCode}`)],
+                        [Markup.button.callback('🔄 Change Number', 'get_started')]
+                    ]));
 
                 } catch (err) {
                     console.error('Error generating pairing code:', err);
                     cleanupUserSession(chatId);
-                    await ctx.replyWithHTML(`${em.errorFormat} <b>Failed to get pairing code. Please try again.</b>`, { parse_mode: 'HTML' });
+                    await ctx.replyWithHTML(`${em.errorFormat} <b>Failed to get pairing code. Please try again.</b>`);
                 }
             }, 1500);
         }
@@ -179,7 +186,7 @@ bot.on('text', async (ctx) => {
     } catch (err) {
         console.error('An unexpected error occurred:', err);
         cleanupUserSession(chatId);
-        await ctx.replyWithHTML(`${em.errorFormat} <b>An unexpected error occurred.</b>`, { parse_mode: 'HTML' });
+        await ctx.replyWithHTML(`${em.errorFormat} <b>An unexpected error occurred.</b>`);
     }
 });
 
