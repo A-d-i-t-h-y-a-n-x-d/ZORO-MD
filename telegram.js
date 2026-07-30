@@ -21,17 +21,16 @@ const bot = new Telegraf(botToken);
 
 const activeSockets = new Map();
 
-// നിങ്ങൾ തന്ന പുതിയ ഇമോജി ഐഡികൾ
+// Custom Premium Emoji Mapping
 const em = {
-    waLink: '💬',
+    waLogo: '<tg-emoji emoji-id="5936079934798696466">🟢</tg-emoji>',
+    blueTick: '<tg-emoji emoji-id="5436053316715424756">☑️</tg-emoji>',
     phone: '<tg-emoji emoji-id="5936079934798696466">📱</tg-emoji>',
     settings: '<tg-emoji emoji-id="5933521976831251008">⚙️</tg-emoji>',
-    pairingSuccess: '<tg-emoji emoji-id="5251386049585768540">🔑</tg-emoji>', // വിജയിക്കുമ്പോൾ മാത്രം കാണിക്കും
+    keyEmoji: '<tg-emoji emoji-id="5251386049585768540">🔑</tg-emoji>',
     generalFeature: '✨',
     errorFormat: '❌',
-    connected: '🟢',
-    blueTick: '☑️',
-    indiaFlag: '🇮🇳'
+    connected: '🟢'
 };
 
 const cleanupUserSession = (chatId) => {
@@ -88,22 +87,27 @@ bot.on('text', async (ctx) => {
         const { state, saveCreds } = await useMultiFileAuthState(userSessionDir);
         const { version } = await fetchLatestBaileysVersion();
 
+        // Optimized WASocket settings for ultra-fast pairing & login
         const sock = makeWASocket({
             version,
             logger: pino({ level: 'silent' }),
             printQRInTerminal: false,
-            browser: ["Ubuntu", "Chrome", "20.0.04"],
+            browser: ["Mac OS", "Chrome", "121.0.0"], // Updated Browser Ident for faster link
             auth: {
                 creds: state.creds,
                 keys: makeCacheableSignalKeyStore(state.keys, pino({ level: 'silent' }))
-            }
+            },
+            connectTimeoutMs: 60000,
+            defaultQueryTimeoutMs: 0,
+            keepAliveIntervalMs: 10000,
+            syncFullHistory: false, // Prevents loading heavy chat history (fixes infinity loading)
+            markOnlineOnConnect: true
         });
 
         activeSockets.set(chatId, sock);
 
         sock.ev.on('creds.update', saveCreds);
 
-        // കണക്ഷൻ സക്സസ് ആകുമ്പോൾ മാത്രം പെയറിങ് സക്സസ് സന്ദേശം അയക്കുന്നു
         sock.ev.on('connection.update', async (update) => {
             const { connection } = update;
 
@@ -119,8 +123,7 @@ bot.on('text', async (ctx) => {
                     console.error('❌ Failed to copy session to main folder:', cpErr);
                 }
 
-                // സെപ്പറേറ്റ് പെയറിങ് സക്സസ് സന്ദേശം
-                await ctx.replyWithHTML(`🎉 <b>${em.pairingSuccess} PAIRING SUCCESSFUL!</b> ${em.connected}\n\nYour WhatsApp has been successfully linked and verified! ${em.blueTick}`);
+                await ctx.replyWithHTML(`🎉 <b>PAIRING SUCCESSFUL!</b> ${em.connected}\n\nYour WhatsApp has been successfully linked and verified! ${em.blueTick}`);
             }
         });
 
@@ -132,12 +135,11 @@ bot.on('text', async (ctx) => {
 
                     try { await ctx.deleteMessage(waitMsg.message_id); } catch (e) {}
 
-                    // പെയറിങ് കോഡ് സന്ദേശത്തിൽ നിന്ന് pairingSuccess ഒഴിവാക്കി
                     const textMessage = 
-                        `┏━━ ${em.waLink} <b>WHATSAPP LINKING</b> ${em.indiaFlag} ${em.connected} ━━┓\n\n` +
+                        `┏━━ ${em.waLogo} <b>AADHI XD LINKING</b> ${em.blueTick} ━━┓\n\n` +
                         `│ ${em.phone} <b>Phone Number:</b> <code>${phoneNumber}</code> ${em.blueTick}\n` +
                         `│ ${em.settings} <b>Settings:</b> Configured\n` +
-                        `│ 🔑 <b>Pairing Code:</b> <code>${formattedCode}</code>\n\n` +
+                        `│ ${em.keyEmoji} <b>Pairing Code:</b> <code>${formattedCode}</code>\n\n` +
                         `┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n` +
                         `📌 <b>Instructions:</b> ${em.generalFeature}\n` +
                         `1️⃣ Open WhatsApp on your phone\n` +
@@ -157,7 +159,7 @@ bot.on('text', async (ctx) => {
                     cleanupUserSession(chatId);
                     await ctx.replyWithHTML(`${em.errorFormat} <b>Error generating pairing code. Please try again with a valid number.</b>`);
                 }
-            }, 3000);
+            }, 2000);
         }
 
     } catch (err) {
