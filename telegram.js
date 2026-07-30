@@ -35,39 +35,40 @@ const cleanupUserSession = (chatId) => {
 };
 
 bot.start(async (ctx) => {
-    // Welcome Message Text
-    const text = "✈️ WELCOME TO AADHI-XD LINKER ☑️\n\n" +
+    // Verified Tick ഒഴിവാക്കി, തുടക്കത്തിൽ മാത്രം Telegram Premium Logo ചേർത്തു
+    const text = "✈️ WELCOME TO AADHI-XD LINKER\n\n" +
                  "Link your WhatsApp account securely with our bot.\n\n" +
                  "👉 Please send your WhatsApp number with country code (e.g., 918136880986) to generate your pairing code.";
 
-    // Message Entities വഴി കസ്റ്റം പ്രീമിയം ഇമോജികൾ സെറ്റ് ചെയ്യുന്നു
-    const entities = [
-        {
-            offset: 0,
-            length: 2, // '✈️'
-            type: 'custom_emoji',
-            custom_emoji_id: '6278147703381723432' // Telegram Premium Logo
-        },
-        {
-            offset: 3,
-            length: 27, // 'WELCOME TO AADHI-XD LINKER'
-            type: 'bold'
-        },
-        {
-            offset: 31,
-            length: 2, // '☑️'
-            type: 'custom_emoji',
-            custom_emoji_id: '5436053316715424756' // Blue Verified Tick
-        }
-    ];
+    const keyboard = Markup.inlineKeyboard([
+        [Markup.button.callback('🚀 GET PAIRING CODE', 'get_started')],
+        [Markup.button.url('🌐 DEVELOPER / SUPPORT', 'https://t.me/Aadhixdofc')]
+    ]);
 
-    await ctx.telegram.sendMessage(ctx.chat.id, text, {
-        entities: entities,
-        ...Markup.inlineKeyboard([
-            [Markup.button.callback('🚀 GET PAIRING CODE', 'get_started')],
-            [Markup.button.url('🌐 DEVELOPER / SUPPORT', 'https://t.me/Aadhixdofc')]
-        ])
-    });
+    try {
+        // തുടക്കത്തിലെ Telegram Premium Logo കസ്റ്റം ഇമോജി മാത്രം അപ്ലൈ ചെയ്യുന്നു
+        const entities = [
+            {
+                offset: 0,
+                length: 2, // '✈️'
+                type: 'custom_emoji',
+                custom_emoji_id: '6278147703381723432' // Telegram Premium Logo
+            },
+            {
+                offset: 3,
+                length: 27, // 'WELCOME TO AADHI-XD LINKER'
+                type: 'bold'
+            }
+        ];
+
+        await ctx.telegram.sendMessage(ctx.chat.id, text, {
+            entities: entities,
+            ...keyboard
+        });
+    } catch (err) {
+        console.log("Emoji error handled. Fallback executed.");
+        await ctx.replyWithHTML("✈️ <b>WELCOME TO AADHI-XD LINKER</b>\n\nLink your WhatsApp account securely with our bot.\n\n👉 <b>Please send your WhatsApp number with country code</b> (e.g., <code>918136880986</code>) to generate your pairing code.", keyboard);
+    }
 });
 
 bot.action('get_started', async (ctx) => {
