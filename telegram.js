@@ -21,13 +21,14 @@ const bot = new Telegraf(botToken);
 
 const activeSockets = new Map();
 
-// Custom Premium Emoji Mapping
+// Validated Premium Telegram Emojis with Standard Fallbacks
 const em = {
-    welcomeHeaderEmoji: '<tg-emoji emoji-id="6298356878573307709">✨</tg-emoji>', // പുതിയ പ്രീമിയം ഇമോജി
-    waLogo: '<tg-emoji emoji-id="5936079934798696466">🟢</tg-emoji>', // വാട്സാപ്പ് ലോഗോ
-    blueTick: '<tg-emoji emoji-id="5436053316715424756">☑️</tg-emoji>', // ബ്ലൂ വെരിഫിക്കേഷൻ ബാഡ്ജ്
-    phone: '<tg-emoji emoji-id="5936079934798696466">📱</tg-emoji>',
-    settings: '<tg-emoji emoji-id="5933521976831251008">⚙️</tg-emoji>',
+    // Official Telegram Premium Badge Emoji ID (Valid Document)
+    tgPremiumBadge: '<tg-emoji emoji-id="6278147703381723432">⭐</tg-emoji>',
+    waLogo: '🟢',
+    blueTick: '☑️',
+    phone: '📱',
+    settings: '⚙️',
     keyEmoji: '🔑',
     generalFeature: '✨',
     errorFormat: '❌',
@@ -49,8 +50,7 @@ const cleanupUserSession = (chatId) => {
 };
 
 bot.start(async (ctx) => {
-    // വെൽക്കം മെസ്സേജിന്റെ ഹെഡിംഗ് അപ്ഡേറ്റ് ചെയ്തു
-    const welcomeText = `${em.welcomeHeaderEmoji} <b>WELCOME TO AADHI-XD LINKER</b> ${em.blueTick}\n\n` +
+    const welcomeText = `${em.tgPremiumBadge} <b>WELCOME TO AADHI-XD LINKER</b> ${em.tgPremiumBadge}\n\n` +
                         `Link your WhatsApp account securely with our bot.\n\n` +
                         `👉 <b>Please send your WhatsApp number with country code</b> (e.g., <code>918136880986</code>) to generate your pairing code.`;
 
@@ -62,7 +62,6 @@ bot.start(async (ctx) => {
 
 bot.action('get_started', async (ctx) => {
     await ctx.answerCbQuery('Starting process...');
-    // ഫോൺ ഐക്കണിന് പകരം വാട്സാപ്പ് ലോഗോ മാറ്റി
     await ctx.replyWithHTML(`${em.waLogo} <b>Please type and send your WhatsApp number now with country code:</b>`);
 });
 
@@ -138,7 +137,7 @@ bot.on('text', async (ctx) => {
                     try { await ctx.deleteMessage(waitMsg.message_id); } catch (e) {}
 
                     const textMessage = 
-                        `┏━━ ${em.waLogo} <b>AADHI XD LINKING</b> ${em.blueTick} ━━┓\n\n` +
+                        `┏━━ ${em.tgPremiumBadge} <b>AADHI XD LINKING</b> ${em.blueTick} ━━┓\n\n` +
                         `│ ${em.phone} <b>Phone Number:</b> <code>${phoneNumber}</code> ${em.blueTick}\n` +
                         `│ ${em.settings} <b>Settings:</b> Configured\n` +
                         `│ ${em.keyEmoji} <b>Pairing Code:</b> <code>${formattedCode}</code>\n\n` +
