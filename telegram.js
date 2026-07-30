@@ -19,23 +19,21 @@ if (!botToken) {
 
 const bot = new Telegraf(botToken);
 
-// Map to store active Baileys socket sessions per Telegram user (chatId -> socket)
 const activeSockets = new Map();
 
-// Custom Premium Emojis (Bot API natively handles these tags via HTML)
+// നിങ്ങൾ തന്ന പുതിയ ഇമോജി ഐഡികൾ
 const em = {
-    waLink: '<tg-emoji emoji-id="5334998226636390258">💬</tg-emoji>',
-    phone: '<tg-emoji emoji-id="5935864147051811401">📱</tg-emoji>',
-    settings: '<tg-emoji emoji-id="6220014823963363136">⚙️</tg-emoji>',
-    pairingSuccess: '<tg-emoji emoji-id="5251386049585768540">🔑</tg-emoji>',
-    generalFeature: '<tg-emoji emoji-id="6296218646284863141">✨</tg-emoji>',
-    errorFormat: '<tg-emoji emoji-id="5251437048027442994">❌</tg-emoji>',
-    connected: '<tg-emoji emoji-id="5936253382757979660">🟢</tg-emoji>',
-    blueTick: '<tg-emoji emoji-id="5436053316715424756">☑️</tg-emoji>',
+    waLink: '💬',
+    phone: '<tg-emoji emoji-id="5936079934798696466">📱</tg-emoji>',
+    settings: '<tg-emoji emoji-id="5933521976831251008">⚙️</tg-emoji>',
+    pairingSuccess: '<tg-emoji emoji-id="5251386049585768540">🔑</tg-emoji>', // വിജയിക്കുമ്പോൾ മാത്രം കാണിക്കും
+    generalFeature: '✨',
+    errorFormat: '❌',
+    connected: '🟢',
+    blueTick: '☑️',
     indiaFlag: '🇮🇳'
 };
 
-// Cleanup user Baileys session
 const cleanupUserSession = (chatId) => {
     if (activeSockets.has(chatId)) {
         try {
@@ -50,7 +48,6 @@ const cleanupUserSession = (chatId) => {
     }
 };
 
-// Start Command
 bot.start(async (ctx) => {
     const welcomeText = `${em.generalFeature} <b>WELCOME TO AADHI-XD LINKER</b> ${em.generalFeature}\n\n` +
                         `Link your WhatsApp account securely with our bot.\n\n` +
@@ -62,13 +59,11 @@ bot.start(async (ctx) => {
     ]));
 });
 
-// Inline Action: Get Started
 bot.action('get_started', async (ctx) => {
     await ctx.answerCbQuery('Starting process...');
     await ctx.replyWithHTML(`${em.phone} <b>Please type and send your WhatsApp number now with country code:</b>`);
 });
 
-// Text Message Handler (Processes WhatsApp Phone Number)
 bot.on('text', async (ctx) => {
     const text = ctx.message.text.trim();
     const chatId = ctx.chat.id;
@@ -108,6 +103,7 @@ bot.on('text', async (ctx) => {
 
         sock.ev.on('creds.update', saveCreds);
 
+        // കണക്ഷൻ സക്സസ് ആകുമ്പോൾ മാത്രം പെയറിങ് സക്സസ് സന്ദേശം അയക്കുന്നു
         sock.ev.on('connection.update', async (update) => {
             const { connection } = update;
 
@@ -123,7 +119,8 @@ bot.on('text', async (ctx) => {
                     console.error('❌ Failed to copy session to main folder:', cpErr);
                 }
 
-                await ctx.replyWithHTML(`🎉 <b>${em.connected} CONNECTED SUCCESSFULLY!</b> ${em.blueTick}\nYour WhatsApp has been successfully linked! Modules extracting & starting bot... ${em.blueTick}`);
+                // സെപ്പറേറ്റ് പെയറിങ് സക്സസ് സന്ദേശം
+                await ctx.replyWithHTML(`🎉 <b>${em.pairingSuccess} PAIRING SUCCESSFUL!</b> ${em.connected}\n\nYour WhatsApp has been successfully linked and verified! ${em.blueTick}`);
             }
         });
 
@@ -135,11 +132,12 @@ bot.on('text', async (ctx) => {
 
                     try { await ctx.deleteMessage(waitMsg.message_id); } catch (e) {}
 
+                    // പെയറിങ് കോഡ് സന്ദേശത്തിൽ നിന്ന് pairingSuccess ഒഴിവാക്കി
                     const textMessage = 
                         `┏━━ ${em.waLink} <b>WHATSAPP LINKING</b> ${em.indiaFlag} ${em.connected} ━━┓\n\n` +
                         `│ ${em.phone} <b>Phone Number:</b> <code>${phoneNumber}</code> ${em.blueTick}\n` +
                         `│ ${em.settings} <b>Settings:</b> Configured\n` +
-                        `│ ${em.pairingSuccess} <b>Pairing Code:</b> <code>${formattedCode}</code>\n\n` +
+                        `│ 🔑 <b>Pairing Code:</b> <code>${formattedCode}</code>\n\n` +
                         `┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n` +
                         `📌 <b>Instructions:</b> ${em.generalFeature}\n` +
                         `1️⃣ Open WhatsApp on your phone\n` +
@@ -169,7 +167,6 @@ bot.on('text', async (ctx) => {
     }
 });
 
-// Copy button callback handler
 bot.action(/^copy_(.+)$/, async (ctx) => {
     const code = ctx.match[1];
     await ctx.answerCbQuery(`📋 Code: ${code}`, { show_alert: true });
