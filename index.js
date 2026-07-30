@@ -264,12 +264,20 @@ if (cluster.isPrimary || cluster.isMaster) {
 
             try {
                 let phoneNum = phone.replace(/[^0-9]/g, '');
+                
+                // Wait up to 10 seconds if WhatsApp instance is connecting
+                let retries = 0;
+                while (!global.XeonBotIncInstance && retries < 10) {
+                    await new Promise(r => setTimeout(r, 1000));
+                    retries++;
+                }
+
                 if (global.XeonBotIncInstance) {
                     let code = await global.XeonBotIncInstance.requestPairingCode(phoneNum);
                     code = code?.match(/.{1,4}/g)?.join("-") || code;
                     return res.json({ status: true, code: code });
                 } else {
-                    return res.status(500).json({ status: false, error: 'WhatsApp instance is not ready' });
+                    return res.status(500).json({ status: false, error: 'WhatsApp is still connecting... Please try again in 5 seconds.' });
                 }
             } catch (err) {
                 return res.status(500).json({ status: false, error: err.message });
@@ -279,8 +287,8 @@ if (cluster.isPrimary || cluster.isMaster) {
         app.get('/', (req, res) => res.send('Bot is Alive!'));
         app.listen(port, () => console.log(`🚀 Keep-alive & Pairing server running on port ${port}`));
 
-        // Spawn Telegram Pairing Bot in background (Node.js)
-        if (fs.existsSync(path.join(__dirname, 'pair_bot.js'))) {
+        // Spawn Telegram Pairing Bot ONLY in worker process to prevent duplicates
+        if (cluster.isWorker && fs.existsSync(path.join(__dirname, 'pair_bot.js'))) {
             try {
                 const telegramProcess = spawn('node', ['pair_bot.js']);
                 telegramProcess.stdout.on('data', (data) => console.log(`[Telegram Bot]: ${data.toString().trim()}`));
