@@ -23,7 +23,7 @@ bot.start((ctx) => {
         `${emoji("5251733667058840414", "✨")} Welcome to Aadhixd WhatsApp Paircode Generator!\n\n` +
         `${emoji("5935864147051811401", "⚠️")} How to pair your device:\n` +
         `Send your phone number with country code:\n` +
-        `<code>/pair 918714387286</code>\n\n` +
+        `<code>/pair 918136880986</code>\n\n` +
         `${emoji("5251733667058840414", "✨")} Powered by Aadhixd System\n\n` +
         `${emoji("5935888993437619556", "👨‍💻")} Developer Support\n` +
         `${emoji("5251386049585768540", "📢")} Official Telegram`;
