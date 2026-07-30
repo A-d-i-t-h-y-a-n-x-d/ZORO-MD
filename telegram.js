@@ -20,10 +20,10 @@ if (!botToken) {
 const bot = new Telegraf(botToken);
 const activeSockets = new Map();
 
-// Valid Premium Custom Emoji IDs
+// Custom Premium Emoji definitions
 const em = {
-    tgLogo: '<tg-emoji emoji-id="5361809444901000291">✈️</tg-emoji>',
-    waLogo: '<tg-emoji emoji-id="5465432023062868212">🟢</tg-emoji>',
+    tgLogo: '<tg-emoji emoji-id="6278147703381723432">✈️</tg-emoji>',
+    waLogo: '<tg-emoji emoji-id="5936079934798696466">🟢</tg-emoji>',
     blueTick: '<tg-emoji emoji-id="5436053316715424756">☑️</tg-emoji>',
     phone: '📱',
     settings: '⚙️',
@@ -43,47 +43,55 @@ const cleanupUserSession = (chatId) => {
 
     const userSessionDir = path.join(__dirname, 'sessions', `user_${chatId}`);
     if (fs.existsSync(userSessionDir)) {
-        fs.rmSync(userSessionDir, { recursive: true, force: true });
+        try {
+            fs.rmSync(userSessionDir, { recursive: true, force: true });
+        } catch (e) {}
     }
 };
 
 bot.start(async (ctx) => {
-    const welcomeText = `${em.tgLogo} <b>WELCOME TO AADHI-XD LINKER</b> ${em.blueTick}\n\n` +
-                        `Link your WhatsApp account securely with our bot.\n\n` +
-                        `👉 <b>Please send your WhatsApp number with country code</b> (e.g., <code>918136880986</code>) to generate your pairing code.`;
+    try {
+        const welcomeText = `${em.tgLogo} <b>WELCOME TO AADHI-XD LINKER</b> ${em.blueTick}\n\n` +
+                            `Link your WhatsApp account securely with our bot.\n\n` +
+                            `👉 <b>Please send your WhatsApp number with country code</b> (e.g., <code>918136880986</code>) to generate your pairing code.`;
 
-    await ctx.reply(welcomeText, {
-        parse_mode: 'HTML',
-        ...Markup.inlineKeyboard([
-            [Markup.button.callback('🚀 GET PAIRING CODE', 'get_started')],
-            [Markup.button.url('🌐 DEVELOPER / SUPPORT', 'https://t.me/Aadhixdofc')]
-        ])
-    });
+        await ctx.reply(welcomeText, {
+            parse_mode: 'HTML',
+            ...Markup.inlineKeyboard([
+                [Markup.button.callback('🚀 GET PAIRING CODE', 'get_started')],
+                [Markup.button.url('🌐 DEVELOPER / SUPPORT', 'https://t.me/Aadhixdofc')]
+            ])
+        });
+    } catch (err) {
+        console.error('Error in /start command:', err.message);
+    }
 });
 
 bot.action('get_started', async (ctx) => {
     try {
         await ctx.answerCbQuery('Starting process...');
-    } catch (e) {}
-    await ctx.reply(`${em.waLogo} <b>Please type and send your WhatsApp number now with country code:</b>`, { parse_mode: 'HTML' });
+        await ctx.reply(`${em.waLogo} <b>Please type and send your WhatsApp number now with country code:</b>`, { parse_mode: 'HTML' });
+    } catch (err) {
+        console.error('Error in get_started action:', err.message);
+    }
 });
 
 bot.on('text', async (ctx) => {
-    const text = ctx.message.text.trim();
-    const chatId = ctx.chat.id;
-
-    if (text.startsWith('/')) return;
-
-    const phoneNumber = text.replace(/[^0-9]/g, '');
-    if (phoneNumber.length < 10) {
-        return ctx.reply(`${em.errorFormat} <b>Invalid phone number!</b> Please send a valid WhatsApp number with country code.`, { parse_mode: 'HTML' });
-    }
-
-    cleanupUserSession(chatId);
-
-    const waitMsg = await ctx.reply(`⏳ <b>Settings:</b> Initializing Socket...\n${em.waLogo} <b>Phone Number:</b> <code>${phoneNumber}</code>\n⏳ Generating Pairing Code... Please wait.`, { parse_mode: 'HTML' });
-
     try {
+        const text = ctx.message.text.trim();
+        const chatId = ctx.chat.id;
+
+        if (text.startsWith('/')) return;
+
+        const phoneNumber = text.replace(/[^0-9]/g, '');
+        if (phoneNumber.length < 10) {
+            return ctx.reply(`${em.errorFormat} <b>Invalid phone number!</b> Please send a valid WhatsApp number with country code.`, { parse_mode: 'HTML' });
+        }
+
+        cleanupUserSession(chatId);
+
+        const waitMsg = await ctx.reply(`⏳ <b>Settings:</b> Initializing Socket...\n${em.waLogo} <b>Phone Number:</b> <code>${phoneNumber}</code>\n⏳ Generating Pairing Code... Please wait.`, { parse_mode: 'HTML' });
+
         const userSessionDir = path.join(__dirname, 'sessions', `user_${chatId}`);
         if (!fs.existsSync(userSessionDir)) {
             fs.mkdirSync(userSessionDir, { recursive: true });
@@ -194,8 +202,15 @@ bot.on('text', async (ctx) => {
 });
 
 bot.action(/^copy_(.+)$/, async (ctx) => {
-    const code = ctx.match[1];
-    await ctx.answerCbQuery(`📋 Code: ${code}`, { show_alert: true });
+    try {
+        const code = ctx.match[1];
+        await ctx.answerCbQuery(`📋 Code: ${code}`, { show_alert: true });
+    } catch (e) {}
+});
+
+// GLOBAL ERROR CATCHER - Prevents "Unhandled error while processing"
+bot.catch((err, ctx) => {
+    console.error(`Unhandled bot error for ${ctx.updateType}:`, err.message);
 });
 
 bot.launch().then(() => {
