@@ -20,6 +20,19 @@ if (!botToken) {
 const bot = new Telegraf(botToken);
 const activeSockets = new Map();
 
+// Emoji definitions
+const em = {
+    tgLogo: '<tg-emoji emoji-id="6278147703381723432">✈️</tg-emoji>',
+    waLogo: '<tg-emoji emoji-id="5936079934798696466">🟢</tg-emoji>',
+    blueTick: '<tg-emoji emoji-id="5436053316715424756">☑️</tg-emoji>',
+    phone: '📱',
+    settings: '⚙️',
+    keyEmoji: '🔑',
+    generalFeature: '✨',
+    errorFormat: '❌',
+    connected: '🟢'
+};
+
 const cleanupUserSession = (chatId) => {
     if (activeSockets.has(chatId)) {
         try {
@@ -35,45 +48,22 @@ const cleanupUserSession = (chatId) => {
 };
 
 bot.start(async (ctx) => {
-    // Verified Tick ഒഴിവാക്കി, തുടക്കത്തിൽ മാത്രം Telegram Premium Logo ചേർത്തു
-    const text = "✈️ WELCOME TO AADHI-XD LINKER\n\n" +
-                 "Link your WhatsApp account securely with our bot.\n\n" +
-                 "👉 Please send your WhatsApp number with country code (e.g., 918136880986) to generate your pairing code.";
+    const welcomeText = `${em.tgLogo} <b>WELCOME TO AADHI-XD LINKER</b>\n\n` +
+                        `Link your WhatsApp account securely with our bot.\n\n` +
+                        `👉 <b>Please send your WhatsApp number with country code</b> (e.g., <code>918136880986</code>) to generate your pairing code.`;
 
-    const keyboard = Markup.inlineKeyboard([
-        [Markup.button.callback('🚀 GET PAIRING CODE', 'get_started')],
-        [Markup.button.url('🌐 DEVELOPER / SUPPORT', 'https://t.me/Aadhixdofc')]
-    ]);
-
-    try {
-        // തുടക്കത്തിലെ Telegram Premium Logo കസ്റ്റം ഇമോജി മാത്രം അപ്ലൈ ചെയ്യുന്നു
-        const entities = [
-            {
-                offset: 0,
-                length: 2, // '✈️'
-                type: 'custom_emoji',
-                custom_emoji_id: '6278147703381723432' // Telegram Premium Logo
-            },
-            {
-                offset: 3,
-                length: 27, // 'WELCOME TO AADHI-XD LINKER'
-                type: 'bold'
-            }
-        ];
-
-        await ctx.telegram.sendMessage(ctx.chat.id, text, {
-            entities: entities,
-            ...keyboard
-        });
-    } catch (err) {
-        console.log("Emoji error handled. Fallback executed.");
-        await ctx.replyWithHTML("✈️ <b>WELCOME TO AADHI-XD LINKER</b>\n\nLink your WhatsApp account securely with our bot.\n\n👉 <b>Please send your WhatsApp number with country code</b> (e.g., <code>918136880986</code>) to generate your pairing code.", keyboard);
-    }
+    await ctx.replyWithHTML(welcomeText, {
+        parse_mode: 'HTML',
+        ...Markup.inlineKeyboard([
+            [Markup.button.callback('🚀 GET PAIRING CODE', 'get_started')],
+            [Markup.button.url('🌐 DEVELOPER / SUPPORT', 'https://t.me/Aadhixdofc')]
+        ])
+    });
 });
 
 bot.action('get_started', async (ctx) => {
     await ctx.answerCbQuery('Starting process...');
-    await ctx.replyWithHTML("🟢 <b>Please type and send your WhatsApp number now with country code:</b>");
+    await ctx.replyWithHTML(`${em.waLogo} <b>Please type and send your WhatsApp number now with country code:</b>`, { parse_mode: 'HTML' });
 });
 
 bot.on('text', async (ctx) => {
@@ -84,12 +74,12 @@ bot.on('text', async (ctx) => {
 
     const phoneNumber = text.replace(/[^0-9]/g, '');
     if (phoneNumber.length < 10) {
-        return ctx.replyWithHTML("❌ <b>Invalid phone number!</b> Please send a valid WhatsApp number with country code (e.g., <code>918714387286</code>).");
+        return ctx.replyWithHTML(`${em.errorFormat} <b>Invalid phone number!</b> Please send a valid WhatsApp number with country code.`, { parse_mode: 'HTML' });
     }
 
     cleanupUserSession(chatId);
 
-    const waitMsg = await ctx.replyWithHTML(`⏳ <b>Settings:</b> Initializing Baileys Socket...\n🟢 <b>Phone Number:</b> <code>${phoneNumber}</code>\n⏳ Generating Pairing Code... Please wait.`);
+    const waitMsg = await ctx.replyWithHTML(`⏳ <b>Settings:</b> Initializing Socket...\n${em.waLogo} <b>Phone Number:</b> <code>${phoneNumber}</code>\n⏳ Generating Pairing Code... Please wait.`, { parse_mode: 'HTML' });
 
     try {
         const userSessionDir = path.join(__dirname, 'sessions', `user_${chatId}`);
@@ -113,7 +103,8 @@ bot.on('text', async (ctx) => {
             defaultQueryTimeoutMs: 0,
             keepAliveIntervalMs: 10000,
             syncFullHistory: false,
-            markOnlineOnConnect: true
+            markOnlineOnConnect: true,
+            generateHighQualityLinkPreview: false
         });
 
         activeSockets.set(chatId, sock);
@@ -121,21 +112,29 @@ bot.on('text', async (ctx) => {
         sock.ev.on('creds.update', saveCreds);
 
         sock.ev.on('connection.update', async (update) => {
-            const { connection } = update;
+            const { connection, lastDisconnect } = update;
 
             if (connection === 'open') {
                 try {
+                    // Save session instantly upon login
                     const mainSessionDir = path.join(__dirname, 'session');
                     if (!fs.existsSync(mainSessionDir)) {
                         fs.mkdirSync(mainSessionDir, { recursive: true });
                     }
                     fs.cpSync(userSessionDir, mainSessionDir, { recursive: true, force: true });
-                    console.log(`✅ Session copied to main ./session folder for user ${chatId}`);
-                } catch (cpErr) {
-                    console.error('❌ Failed to copy session to main folder:', cpErr);
-                }
+                    console.log(`✅ Session successfully created & saved for user ${chatId}`);
 
-                await ctx.replyWithHTML("🎉 <b>PAIRING SUCCESSFUL!</b> 🟢\n\nYour WhatsApp has been successfully linked and verified!");
+                    await ctx.replyWithHTML(`🎉 <b>PAIRING SUCCESSFUL!</b> ${em.connected}\n\nYour WhatsApp has been successfully linked! ${em.blueTick}`, { parse_mode: 'HTML' });
+                } catch (cpErr) {
+                    console.error('❌ Failed to save session:', cpErr);
+                }
+            }
+
+            if (connection === 'close') {
+                const statusCode = lastDisconnect?.error?.output?.statusCode;
+                if (statusCode !== 401) {
+                    console.log('Connection closed, cleaning up...');
+                }
             }
         });
 
@@ -148,12 +147,12 @@ bot.on('text', async (ctx) => {
                     try { await ctx.deleteMessage(waitMsg.message_id); } catch (e) {}
 
                     const textMessage = 
-                        `┏━━ 🟢 <b>AADHI XD LINKING</b> ━━┓\n\n` +
-                        `│ 📱 <b>Phone Number:</b> <code>${phoneNumber}</code>\n` +
-                        `│ ⚙️ <b>Settings:</b> Configured\n` +
-                        `│ 🔑 <b>Pairing Code:</b> <code>${formattedCode}</code>\n\n` +
+                        `┏━━ ${em.waLogo} <b>AADHI XD LINKING</b> ━━┓\n\n` +
+                        `│ ${em.phone} <b>Phone Number:</b> <code>${phoneNumber}</code>\n` +
+                        `│ ${em.settings} <b>Settings:</b> Configured\n` +
+                        `│ ${em.keyEmoji} <b>Pairing Code:</b> <code>${formattedCode}</code>\n\n` +
                         `┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n` +
-                        `📌 <b>Instructions:</b> ✨\n` +
+                        `📌 <b>Instructions:</b> ${em.generalFeature}\n` +
                         `1️⃣ Open WhatsApp on your phone\n` +
                         `2️⃣ Go to <b>Settings > Linked Devices</b>\n` +
                         `3️⃣ Tap <b>Link a Device</b> -> <b>Link with phone number instead</b>\n` +
@@ -161,23 +160,26 @@ bot.on('text', async (ctx) => {
 
                     const cleanCode = String(formattedCode).replace(/[^a-zA-Z0-9]/g, '');
 
-                    await ctx.replyWithHTML(textMessage, Markup.inlineKeyboard([
-                        [Markup.button.callback(`📋 Copy Code: ${formattedCode}`, `copy_${cleanCode}`)],
-                        [Markup.button.callback('🔄 Change Number', 'get_started')]
-                    ]));
+                    await ctx.replyWithHTML(textMessage, {
+                        parse_mode: 'HTML',
+                        ...Markup.inlineKeyboard([
+                            [Markup.button.callback(`📋 Copy Code: ${formattedCode}`, `copy_${cleanCode}`)],
+                            [Markup.button.callback('🔄 Change Number', 'get_started')]
+                        ])
+                    });
 
                 } catch (err) {
                     console.error('Error generating pairing code:', err);
                     cleanupUserSession(chatId);
-                    await ctx.replyWithHTML("❌ <b>Error generating pairing code. Please try again with a valid number.</b>");
+                    await ctx.replyWithHTML(`${em.errorFormat} <b>Failed to get pairing code. Please try again.</b>`, { parse_mode: 'HTML' });
                 }
-            }, 2000);
+            }, 1500);
         }
 
     } catch (err) {
         console.error('An unexpected error occurred:', err);
         cleanupUserSession(chatId);
-        await ctx.replyWithHTML("❌ <b>An unexpected error occurred.</b>");
+        await ctx.replyWithHTML(`${em.errorFormat} <b>An unexpected error occurred.</b>`, { parse_mode: 'HTML' });
     }
 });
 
