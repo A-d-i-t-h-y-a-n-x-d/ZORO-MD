@@ -55,7 +55,7 @@
 
 [![Telegram Bot](https://img.shields.io/badge/Telegram-Get%20Session%20%2F%20Pairing-2CA5E0?style=for-the-badge&logo=telegram)](https://t.me/Aadhi_xd_num_bot)
 
-1. Deploy the project on your hosting platform (Heroku, Render, VPS, or Console Panel).
+1. Deploy the project on your hosting platform (Heroku, Render, VPS, Bot-Hosting.net,or Console Panel).
 2. Monitor your deployment console until you see the log: **`WhatsApp Connection Started`**.
 3. Open your Telegram Bot and send `/start`.
 4. Request your WhatsApp Pairing Code.
