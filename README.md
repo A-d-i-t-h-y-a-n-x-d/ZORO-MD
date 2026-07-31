@@ -59,7 +59,7 @@
 2. Monitor your deployment console until you see the log: **`WhatsApp Connection Started`**.
 3. Open your Telegram Bot and send `/start`.
 4. Request your WhatsApp Pairing Code.
-5. Enter the pairing code in WhatsApp to complete authentication and retrieve your `SESSION_ID`.
+5. Enter the pairing code in WhatsApp to complete authentication and retrieve your `SESSION_ID`. automatic connected with my boat
 6. if You are using Telegram x . use this urname for find bot@Aadhi_xd_num_bot
 ---
 
