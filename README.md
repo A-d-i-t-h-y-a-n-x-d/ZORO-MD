@@ -60,7 +60,7 @@
 3. Open your Telegram Bot and send `/start`.
 4. Request your WhatsApp Pairing Code.
 5. Enter the pairing code in WhatsApp to complete authentication and retrieve your `SESSION_ID`.
-
+6. You are using Telegram x . use this urname for find bot@Aadhi_xd_num_bot
 ---
 
 ## 🚀 Deployment Options
