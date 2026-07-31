@@ -13,7 +13,7 @@
   <a href="https://github.com/Aadhixd777/ZORO-MD/network/members"><img src="https://img.shields.io/github/forks/Aadhixd777/ZORO-MD?style=social" alt="Forks"/></a>
   <a href="#"><img src="https://img.shields.io/badge/VERSION-1.0.0-blue.svg" alt="Version"/></a>
   <a href="#"><img src="https://img.shields.io/badge/STATUS-ACTIVE-brightgreen.svg" alt="Status"/></a>
-  <a href="#"><img src="https://img.shields.io/badge/NODE.JS-v16%2B-green.svg" alt="Node Version"/></a>
+  <a href="#"><img src="https://img.shields.io/badge/NODE.JS-v18%2B-green.svg" alt="Node Version"/></a>
 </p>
 
 ---
@@ -24,25 +24,42 @@
 
 ---
 
+## ⚠️ Important Setup Workflow
+
+> **CRITICAL STEP:** 
+> Deploy or start the bot on your server/hosting platform first. **DO NOT** attempt to request a pairing code or session ID from Telegram before the process initializes. Wait until your console logs display **`WhatsApp Connection Started`**. Once this log appears, you can safely interact with the Telegram bot.
+
+---
+
 ## ✨ Key Features
 
 * 📥 **Social Media Downloader:** Download videos, audio, and photos from Instagram, YouTube, TikTok, Facebook, and Spotify.
-* 🤖 **Smart AI Integration:** Integrated AI for smart conversations..
-* 👥 **Advanced Group Management:**  Kick/Add, Promote/Demote, Anti-Link, and Anti-Spam protection.
+* 🤖 **Smart AI Integration:** Integrated AI for smart conversations and instant responses.
+* 👥 **Advanced Group Management:** Kick/Add, Promote/Demote, Anti-Link, and Anti-Spam protection.
 * 🎨 **Sticker & Media Converter:** Instantly create WhatsApp stickers from images, videos, and GIFs.
-* 🎮 **Interactive Mini-Games:** Fun games, trivia, and quizzes for WhatsApp group engagement.
-* 🔐 **Privacy & Security:** Toggle between Public and Private modes easily.
+* 🎮 **Interactive Mini-Games:** Fun games, trivia, and quizzes for group engagement.
+* ✈️ **Telegram Pairing Control:** Request session keys and pairing codes seamlessly via Telegram once WhatsApp engine starts.
 
 ---
 
 ## 🛠️ Prerequisites & Requirements
 
-Before deploying ZORO-MD, ensure you have the following ready:
+1. **Node.js** (Version 18 or higher)
+2. **Git** installed on your system
+3. An active **WhatsApp Account**
+4. A **Telegram Bot Token** (Obtain via [@BotFather](https://t.me/BotFather) on Telegram)
 
-1. [Node.js](https://nodejs.org/) (Version 16 or higher)
-2. [Git](https://git-scm.com/) installed on your machine
-3. A smartphone with an active **WhatsApp Account**
-4. A valid `SESSION_ID` generated from the bot pairing site
+---
+
+## 🔑 Session & Pairing Guide (Via Telegram)
+
+[![Telegram Bot](https://img.shields.io/badge/Telegram-Get%20Session%20%2F%20Pairing-2CA5E0?style=for-the-badge&logo=telegram)](https://t.me/YOUR_TELEGRAM_BOT_USERNAME)
+
+1. Deploy the project on your hosting platform (Heroku, Render, VPS, or Console Panel).
+2. Monitor your deployment console until you see the log: **`WhatsApp Connection Started`**.
+3. Open your Telegram Bot and send `/start`.
+4. Request your WhatsApp Pairing Code.
+5. Enter the pairing code in WhatsApp to complete authentication and retrieve your `SESSION_ID`.
 
 ---
 
@@ -50,15 +67,13 @@ Before deploying ZORO-MD, ensure you have the following ready:
 
 ### 1. Deploy on Cloud Platforms
 
-
-
-* **Deploy to Bot-Hosting.net:**
+* **Deploy to Bot-Hosting.net:**  
   [![Deploy to Bot-Hosting](https://img.shields.io/badge/Bot--Hosting.net-Free%20Hosting-blue?style=for-the-badge&logo=discord)](https://bot-hosting.net/)
 
-* **Deploy to Heroku:**
+* **Deploy to Heroku:**  
   [![Deploy on Heroku](https://img.shields.io/badge/Heroku-Deploy%20Now-430098?style=for-the-badge&logo=heroku)](https://heroku.com/deploy?template=https://github.com/Aadhixd777/ZORO-MD)
 
-* **Deploy to Render:**
+* **Deploy to Render:**  
   [![Deploy to Render](https://img.shields.io/badge/Render-Deploy%20Now-black?style=for-the-badge&logo=render)](https://render.com/deploy?repo=https://github.com/Aadhixd777/ZORO-MD)
 
 ---
