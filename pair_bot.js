@@ -44,21 +44,21 @@ async function checkGitHubStar(username) {
 // Command: /start
 bot.start((ctx) => {
     const welcomeText = 
-        `${emoji("5936079934798696466", "💬")} <b>ZORO MD ${emoji("5233354831984353090", "📱")} WHATSAPP PAIRCODE GENERATOR</b> ${emoji("5251733667058840414", "✔️")}\n\n` +
+        `${emoji("5233354831984353090", "📱")} <b>ZORO MD WHATSAPP PAIRCODE GENERATOR</b> ${emoji("5251733667058840414", "✔️")}\n\n` +
         `Welcome to Aadhixd ${emoji("5233354831984353090", "📱")} WhatsApp Paircode Generator!\n\n` +
         `${emoji("5346181118884331907", "⚠️")} <b>Step 1: Verify GitHub Star</b>\n` +
         `Before pairing, you must Star our repository:\n` +
         `👉 <a href="https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}">https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}</a>\n\n` +
-        `${emoji("5330237710655306682", "⚠️")} <b>Step 2: Send your GitHub Username:</b>\n` +
+        `${emoji("5251671733630431622", "⚠️")} <b>Step 2: Send your GitHub Username:</b>\n` +
         `<code>/verify your_github_username</code>\n\n` +
         `Powered by Aadhixd System ${emoji("5251386049585768540", "✔")}\n\n` +
-        `👨‍💻 Developer Support\n` +
-        `📢 Official Telegram`;
+        `${emoji("5364310996179503764", "📸")} Developer Support\n` +
+        `Official Telegram ${emoji("5251733667058840414", "✔️")}`;
 
     ctx.replyWithHTML(welcomeText, {
         disable_web_page_preview: true,
         ...Markup.inlineKeyboard([
-            [Markup.button.url(`${emoji("5235511004351190835", "⭐")} Star & Fork Repository`, `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}`)],
+            [Markup.button.url("Star & Fork Repository", `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}`)],
             [Markup.button.url("Developer Support", "https://www.instagram.com/aadhi.x._______________?igsh=MWd5a21oeGtpZzNqYw==")],
             [Markup.button.url("Official Telegram", "https://t.me/Aadhixdofc")]
         ])
@@ -86,9 +86,9 @@ bot.command('verify', async (ctx) => {
             ctx.chat.id,
             waitMsg.message_id,
             null,
-            `${emoji("5936077521027077123", "✅")} <b>Verification Successful!</b>\n\n` +
-            `${emoji("5935921948721681362", "✨")} Thank you for starring <code>${GITHUB_REPO}</code>! Your pairing section is now active.\n\n` +
-            `Now you can generate your WhatsApp pairing code using:\n` +
+            `${emoji("5251685816828194329", "✅")} <b>Verification Successful!</b>\n\n` +
+            `Thank you for starring <code>${GITHUB_REPO}</code>! Your pairing section is now active ${emoji("5251733667058840414", "✔️")}.\n\n` +
+            `${emoji("4969971262546772590", "📲")} Now you can generate your WhatsApp pairing code using:\n` +
             `<code>/pair your_phone_number</code>\n\n` +
             `Example: <code>/pair 918136880986</code>`,
             { parse_mode: 'HTML' }
@@ -122,7 +122,7 @@ bot.command('pair', async (ctx) => {
             `1. Star our repo: https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}\n` +
             `2. Send your GitHub username: <code>/verify your_github_username</code>`,
             Markup.inlineKeyboard([
-                [Markup.button.url("⭐ Star Repository", `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}`)]
+                [Markup.button.url("Star Repository", `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}`)]
             ])
         );
     }
@@ -147,14 +147,14 @@ bot.command('pair', async (ctx) => {
             const cleanCode = rawCode.replace(/-/g, '');
 
             const successText = 
-                `💬 <b>AADHIXD ${emoji("5233354831984353090", "📱")} PAIRCODE GENERATED</b>\n\n` +
+                `${emoji("5233354831984353090", "📱")} <b>AADHIXD PAIRCODE GENERATED</b>\n\n` +
                 `YOUR CODE: <code>${rawCode}</code>\n\n` +
                 `Steps to link:\n` +
                 `1. Open ${emoji("5233354831984353090", "📱")} WhatsApp > Settings > Linked Devices.\n` +
                 `2. Tap Link a Device > Link with phone number.\n` +
                 `3. Enter the pairing code above.\n\n` +
                 `Bot will auto activate after verification!\n\n` +
-                `👨‍💻 Developer Support`;
+                `${emoji("5364310996179503764", "📸")} Developer Support`;
 
             await ctx.telegram.editMessageText(
                 ctx.chat.id,
@@ -178,7 +178,7 @@ bot.command('pair', async (ctx) => {
 });
 
 bot.launch().then(() => {
-    console.log("🤖 Telegram Pairing Bot started successfully with New WhatsApp Emoji & GitHub Verification...");
+    console.log("🤖 Telegram Pairing Bot started successfully...");
 }).catch((err) => {
     console.error("❌ Telegraf Bot Launch Error:", err);
 });
