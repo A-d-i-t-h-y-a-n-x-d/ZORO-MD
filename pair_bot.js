@@ -20,11 +20,10 @@ const emoji = (id, symbol = "⚡") => `<tg-emoji emoji-id="${id}">${symbol}</tg-
 // ==========================================
 const GITHUB_OWNER = "Aadhixd777";
 const GITHUB_REPO = "ZORO-MD";
-const GITHUB_TOKEN = "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"; // Updated GitHub Token
+const GITHUB_TOKEN = "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"; // 👈 ഇവിടെ 'ghp_' എന്ന് സ്മാൾ ലെറ്ററിലാണ് നൽകിയിരിക്കുന്നത്
 
 const verifiedUsers = new Map();
 
-// 100% Working GitHub Star Verification Function with Token
 async function checkGitHubStar(username) {
     try {
         const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/stargazers`;
@@ -42,7 +41,7 @@ async function checkGitHubStar(username) {
 
         return stargazers.some(user => user.login.toLowerCase() === username.toLowerCase());
     } catch (error) {
-        console.error("GitHub API Error:", error.message);
+        console.error("GitHub API Error:", error.response ? error.response.data : error.message);
         return false;
     }
 }
