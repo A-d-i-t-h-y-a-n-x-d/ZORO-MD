@@ -20,7 +20,7 @@ const emoji = (id, symbol = "⚡") => `<tg-emoji emoji-id="${id}">${symbol}</tg-
 // ==========================================
 const GITHUB_OWNER = "Aadhixd777";
 const GITHUB_REPO = "ZORO-MD";
-const GITHUB_TOKEN = "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"; // Updated GitHub Token
+const GITHUB_TOKEN = "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"; // Updated GitHub Token
 
 const verifiedUsers = new Map();
 
