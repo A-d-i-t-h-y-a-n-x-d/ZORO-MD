@@ -21,17 +21,26 @@ const emoji = (id, symbol = "⚡") => `<tg-emoji emoji-id="${id}">${symbol}</tg-
 // ==========================================
 const GITHUB_OWNER = "Aadhixd777";
 const GITHUB_REPO = "ZORO-MD";
+const GITHUB_TOKEN = "Ghp_bkPqfbFvZImrqtehPLMIVykGuGxRiY01xTlb"; // Embedded directly as requested
 
 // Store verified users temporarily in memory
 const verifiedUsers = new Map();
 
-// Function to check GitHub Star via API
+// ==========================================
+// 🔄 Function to check GitHub Star via API
+// ==========================================
 async function checkGitHubStar(username) {
     try {
-        const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/stargazers/${username}`;
-        const response = await axios.get(url, {
-            headers: { 'User-Agent': 'Node.js-Telegram-Bot' }
-        });
+        const url = `https://api.github.com/users/${username}/starred/${GITHUB_OWNER}/${GITHUB_REPO}`;
+        
+        const headers = { 
+            'User-Agent': 'Node.js-Telegram-Bot',
+            'Accept': 'application/vnd.github+json',
+            'Authorization': `Bearer ${GITHUB_TOKEN}`
+        };
+
+        const response = await axios.get(url, { headers });
+        
         if (response.status === 204) {
             return true;
         }
