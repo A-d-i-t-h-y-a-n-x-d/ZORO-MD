@@ -1,25 +1,25 @@
-Const cluster = require('cluster');
-Const fs = require('fs');
-Const path = require('path');
-Const axios = require('axios');
-Const { execSync, spawn } = require('child_process');
-Require('dotenv').config();
+const cluster = require('cluster');
+const fs = require('fs');
+const path = require('path');
+const axios = require('axios');
+const { execSync, spawn } = require('child_process');
+require('dotenv').config();
 
 // ============================================
 // AUTO RESTART SYSTEM (MASTER PROCESS)
 // ============================================
-If (cluster.isPrimary || cluster.isMaster) {
-    Console.log('\n╔════════════════════════════════════╗');
-    Console.log('║  🛡️ ZORO MD SYSTEM MONITOR ACTIVE    ║');
-    Console.log('╚════════════════════════════════════╝\n');
-    Console.log('✅ Auto-restart system is active...\n');
+if (cluster.isPrimary || cluster.isMaster) {
+    console.log('\n╔════════════════════════════════════╗');
+    console.log('║  🛡️ ZORO MD SYSTEM MONITOR ACTIVE    ║');
+    console.log('╚════════════════════════════════════╝\n');
+    console.log('✅ Auto-restart system is active...\n');
     
-    Cluster.fork(); // Start the worker (the bot)
+    cluster.fork(); // Start the worker (the bot)
 
-    Cluster.on('exit', (worker, code, signal) => {
-        Console.log(`\n⚠️ Bot process stopped (Code: ${code}). Restarting in 2 seconds...\n`);
-        SetTimeout(() => {
-            Cluster.fork();
+    cluster.on('exit', (worker, code, signal) => {
+        console.log(`\n⚠️ Bot process stopped (Code: ${code}). Restarting in 2 seconds...\n`);
+        setTimeout(() => {
+            cluster.fork();
         }, 2000);
     });
 
@@ -27,548 +27,545 @@ If (cluster.isPrimary || cluster.isMaster) {
     // ============================================
     // MODULE UPDATER - RUNS ONLY ON FIRST START
     // ============================================
-    Async function downloadAndExtractModules() {
-        Const settingsPath = path.join(__dirname, 'settings.js');
-        Const modulesInstalledFlag = path.join(__dirname, '.modules_installed');
+    async function downloadAndExtractModules() {
+        const settingsPath = path.join(__dirname, 'settings.js');
+        const modulesInstalledFlag = path.join(__dirname, '.modules_installed');
         
-        If (fs.existsSync(modulesInstalledFlag)) {
-            Console.log('✅ Modules already installed, skipping download');
-            Return true;
+        if (fs.existsSync(modulesInstalledFlag)) {
+            console.log('✅ Modules already installed, skipping download');
+            return true;
         }
         
-        If (!fs.existsSync(settingsPath)) {
-            Console.log('⚠️ settings.js not found, skipping module update');
-            Return false;
+        if (!fs.existsSync(settingsPath)) {
+            console.log('⚠️ settings.js not found, skipping module update');
+            return false;
         }
         
-        Const settings = require('./settings');
-        Const zipUrl = settings.updateZipUrl;
+        const settings = require('./settings');
+        const zipUrl = settings.updateZipUrl;
         
-        If (!zipUrl) {
-            Console.log('⚠️ No updateZipUrl configured in settings.js');
-            Return false;
+        if (!zipUrl) {
+            console.log('⚠️ No updateZipUrl configured in settings.js');
+            return false;
         }
 
-        Const TEMP_DIR = path.join(__dirname, 'temp_update');
-        Const ZIP_FILE = path.join(TEMP_DIR, 'modules.zip');
-        Const EXTRACT_DIR = path.join(TEMP_DIR, 'extracted');
+        const TEMP_DIR = path.join(__dirname, 'temp_update');
+        const ZIP_FILE = path.join(TEMP_DIR, 'modules.zip');
+        const EXTRACT_DIR = path.join(TEMP_DIR, 'extracted');
 
-        Console.log('📥 DOWNLOADING MODULES FROM REPOSITORY...');
-        Console.log(`📍 URL: ${zipUrl}`);
+        console.log('📥 DOWNLOADING MODULES FROM REPOSITORY...');
+        console.log(`📍 URL: ${zipUrl}`);
 
-        Try {
-            If (!fs.existsSync(TEMP_DIR)) {
-                Fs.mkdirSync(TEMP_DIR, { recursive: true });
+        try {
+            if (!fs.existsSync(TEMP_DIR)) {
+                fs.mkdirSync(TEMP_DIR, { recursive: true });
             }
 
-            Const response = await axios({
-                Method: 'get',
-                Url: zipUrl,
-                ResponseType: 'arraybuffer',
-                Timeout: 120000,
-                Headers: {
+            const response = await axios({
+                method: 'get',
+                url: zipUrl,
+                responseType: 'arraybuffer',
+                timeout: 120000,
+                headers: {
                     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
                 }
             });
 
-            Fs.writeFileSync(ZIP_FILE, response.data);
-            Console.log('✅ DOWNLOAD COMPLETE!');
+            fs.writeFileSync(ZIP_FILE, response.data);
+            console.log('✅ DOWNLOAD COMPLETE!');
 
-            If (fs.existsSync(EXTRACT_DIR)) {
-                Fs.rmSync(EXTRACT_DIR, { recursive: true, force: true });
+            if (fs.existsSync(EXTRACT_DIR)) {
+                fs.rmSync(EXTRACT_DIR, { recursive: true, force: true });
             }
-            Fs.mkdirSync(EXTRACT_DIR, { recursive: true });
+            fs.mkdirSync(EXTRACT_DIR, { recursive: true });
 
-            Console.log('📦 EXTRACTING FILES...');
-            ExecSync(`unzip -o "${ZIP_FILE}" -d "${EXTRACT_DIR}"`, { stdio: 'pipe' });
+            console.log('📦 EXTRACTING FILES...');
+            execSync(`unzip -o "${ZIP_FILE}" -d "${EXTRACT_DIR}"`, { stdio: 'pipe' });
 
-            Const extractedFolders = fs.readdirSync(EXTRACT_DIR);
-            Const moduleFolder = extractedFolders.find(f => f.includes('ZORO-MD-MODULES'));
+            const extractedFolders = fs.readdirSync(EXTRACT_DIR);
+            const moduleFolder = extractedFolders.find(f => f.includes('ZORO-MD-MODULES'));
             
-            If (!moduleFolder) {
-                Console.log('❌ Could not find modules folder in extracted files');
-                Return false;
+            if (!moduleFolder) {
+                console.log('❌ Could not find modules folder in extracted files');
+                return false;
             }
 
-            Const sourcePath = path.join(EXTRACT_DIR, moduleFolder);
-            Const basePath = __dirname;
+            const sourcePath = path.join(EXTRACT_DIR, moduleFolder);
+            const basePath = __dirname;
 
-            Const foldersToSync = ['lib', 'plugins', 'data', 'media'];
-            Const filesToSync = ['main.js', 'config.js'];
+            const foldersToSync = ['lib', 'plugins', 'data', 'media'];
+            const filesToSync = ['main.js', 'config.js'];
 
-            For (const folder of foldersToSync) {
-                Const sourceFolder = path.join(sourcePath, folder);
-                Const destFolder = path.join(basePath, folder);
+            for (const folder of foldersToSync) {
+                const sourceFolder = path.join(sourcePath, folder);
+                const destFolder = path.join(basePath, folder);
                 
-                If (fs.existsSync(sourceFolder)) {
-                    If (!fs.existsSync(destFolder)) {
-                        Fs.mkdirSync(destFolder, { recursive: true });
+                if (fs.existsSync(sourceFolder)) {
+                    if (!fs.existsSync(destFolder)) {
+                        fs.mkdirSync(destFolder, { recursive: true });
                     }
                     
-                    Fs.cpSync(sourceFolder, destFolder, { recursive: true, force: true });
-                    Console.log(`✅ SYNCED FOLDER: ${folder}`);
+                    fs.cpSync(sourceFolder, destFolder, { recursive: true, force: true });
+                    console.log(`✅ SYNCED FOLDER: ${folder}`);
                 }
             }
 
-            For (const file of filesToSync) {
-                Const sourceFile = path.join(sourcePath, file);
-                Const destFile = path.join(basePath, file);
+            for (const file of filesToSync) {
+                const sourceFile = path.join(sourcePath, file);
+                const destFile = path.join(basePath, file);
                 
-                If (fs.existsSync(sourceFile)) {
-                    Fs.copyFileSync(sourceFile, destFile);
-                    Console.log(`✅ SYNCED FILE: ${file}`);
+                if (fs.existsSync(sourceFile)) {
+                    fs.copyFileSync(sourceFile, destFile);
+                    console.log(`✅ SYNCED FILE: ${file}`);
                 }
             }
 
-            Fs.rmSync(TEMP_DIR, { recursive: true, force: true });
-            Fs.writeFileSync(modulesInstalledFlag, new Date().toISOString());
+            fs.rmSync(TEMP_DIR, { recursive: true, force: true });
+            fs.writeFileSync(modulesInstalledFlag, new Date().toISOString());
             
-            Console.log('🎉 MODULES UPDATED SUCCESSFULLY!');
-            Return true;
+            console.log('🎉 MODULES UPDATED SUCCESSFULLY!');
+            return true;
 
         } catch (error) {
-            Console.error('❌ Error updating modules:', error.message);
-            If (fs.existsSync(TEMP_DIR)) {
-                Fs.rmSync(TEMP_DIR, { recursive: true, force: true });
+            console.error('❌ Error updating modules:', error.message);
+            if (fs.existsSync(TEMP_DIR)) {
+                fs.rmSync(TEMP_DIR, { recursive: true, force: true });
             }
-            Return false;
+            return false;
         }
     }
 
     // ============================================
     // FFMPEG CHECK AND AUTO-INSTALL
     // ============================================
-    Async function checkAndInstallFFmpeg() {
-        Console.log('🎬 CHECKING FFMPEG INSTALLATION...');
+    async function checkAndInstallFFmpeg() {
+        console.log('🎬 CHECKING FFMPEG INSTALLATION...');
         
-        Const ffmpegDir = path.join(__dirname, 'ffmpeg_bin');
-        Const ffmpegPath = path.join(ffmpegDir, 'ffmpeg');
-        Const ffprobePath = path.join(ffmpegDir, 'ffprobe');
+        const ffmpegDir = path.join(__dirname, 'ffmpeg_bin');
+        const ffmpegPath = path.join(ffmpegDir, 'ffmpeg');
+        const ffprobePath = path.join(ffmpegDir, 'ffprobe');
         
-        Try {
-            Const result = execSync('ffmpeg -version', { stdio: 'pipe', encoding: 'utf8' });
-            Const version = result.split('\n')[0];
-            Console.log(`✅ FFMPEG FOUND IN SYSTEM: ${version.substring(0, 50)}...`);
-            Return true;
+        try {
+            const result = execSync('ffmpeg -version', { stdio: 'pipe', encoding: 'utf8' });
+            const version = result.split('\n')[0];
+            console.log(`✅ FFMPEG FOUND IN SYSTEM: ${version.substring(0, 50)}...`);
+            return true;
         } catch (error) {
-            Console.log('⚠️ FFmpeg not found in system PATH');
+            console.log('⚠️ FFmpeg not found in system PATH');
         }
         
-        If (fs.existsSync(ffmpegPath)) {
-            Try {
-                Const result = execSync(`"${ffmpegPath}" -version`, { stdio: 'pipe', encoding: 'utf8' });
-                Const version = result.split('\n')[0];
-                Console.log(`✅ FFMPEG FOUND LOCALLY: ${version.substring(0, 50)}...`);
-                Process.env.PATH = `${ffmpegDir}:${process.env.PATH}`;
-                Console.log('✅ ADDED FFMPEG TO PATH');
-                Return true;
+        if (fs.existsSync(ffmpegPath)) {
+            try {
+                const result = execSync(`"${ffmpegPath}" -version`, { stdio: 'pipe', encoding: 'utf8' });
+                const version = result.split('\n')[0];
+                console.log(`✅ FFMPEG FOUND LOCALLY: ${version.substring(0, 50)}...`);
+                process.env.PATH = `${ffmpegDir}:${process.env.PATH}`;
+                console.log('✅ ADDED FFMPEG TO PATH');
+                return true;
             } catch (error) {
-                Console.log('⚠️ Local FFmpeg exists but not working, will re-download');
+                console.log('⚠️ Local FFmpeg exists but not working, will re-download');
             }
         }
         
-        Console.log('📥 DOWNLOADING FFMPEG AUTOMATICALLY...');
+        console.log('📥 DOWNLOADING FFMPEG AUTOMATICALLY...');
         
-        Try {
-            If (!fs.existsSync(ffmpegDir)) {
-                Fs.mkdirSync(ffmpegDir, { recursive: true });
+        try {
+            if (!fs.existsSync(ffmpegDir)) {
+                fs.mkdirSync(ffmpegDir, { recursive: true });
             }
             
-            Const FFMPEG_URL = 'https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz';
-            Const tempFile = path.join(__dirname, 'ffmpeg_temp.tar.xz');
-            Const extractDir = path.join(__dirname, 'ffmpeg_extract');
+            const FFMPEG_URL = 'https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz';
+            const tempFile = path.join(__dirname, 'ffmpeg_temp.tar.xz');
+            const extractDir = path.join(__dirname, 'ffmpeg_extract');
             
-            Console.log('📍 DOWNLOADING FROM johnvansickle.com...');
+            console.log('📍 DOWNLOADING FROM johnvansickle.com...');
             
-            Const response = await axios({
-                Method: 'get',
-                Url: FFMPEG_URL,
-                ResponseType: 'arraybuffer',
-                Timeout: 300000,
-                Headers: {
+            const response = await axios({
+                method: 'get',
+                url: FFMPEG_URL,
+                responseType: 'arraybuffer',
+                timeout: 300000,
+                headers: {
                     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
                 }
             });
             
-            Fs.writeFileSync(tempFile, response.data);
-            Console.log('✅ DOWNLOAD COMPLETE!');
+            fs.writeFileSync(tempFile, response.data);
+            console.log('✅ DOWNLOAD COMPLETE!');
             
-            Console.log('📦 EXTRACTING FFMPEG...');
-            If (fs.existsSync(extractDir)) {
-                Fs.rmSync(extractDir, { recursive: true, force: true });
+            console.log('📦 EXTRACTING FFMPEG...');
+            if (fs.existsSync(extractDir)) {
+                fs.rmSync(extractDir, { recursive: true, force: true });
             }
-            Fs.mkdirSync(extractDir, { recursive: true });
+            fs.mkdirSync(extractDir, { recursive: true });
             
-            ExecSync(`tar -xf "${tempFile}" -C "${extractDir}"`, { stdio: 'pipe' });
+            execSync(`tar -xf "${tempFile}" -C "${extractDir}"`, { stdio: 'pipe' });
             
-            Const extractedFolders = fs.readdirSync(extractDir);
-            Const ffmpegFolder = extractedFolders.find(f => f.includes('ffmpeg'));
+            const extractedFolders = fs.readdirSync(extractDir);
+            const ffmpegFolder = extractedFolders.find(f => f.includes('ffmpeg'));
             
-            If (ffmpegFolder) {
-                Const srcFFmpeg = path.join(extractDir, ffmpegFolder, 'ffmpeg');
-                Const srcFFprobe = path.join(extractDir, ffmpegFolder, 'ffprobe');
+            if (ffmpegFolder) {
+                const srcFFmpeg = path.join(extractDir, ffmpegFolder, 'ffmpeg');
+                const srcFFprobe = path.join(extractDir, ffmpegFolder, 'ffprobe');
                 
-                If (fs.existsSync(srcFFmpeg)) {
-                    Fs.copyFileSync(srcFFmpeg, ffmpegPath);
-                    Fs.chmodSync(ffmpegPath, '755');
-                    Console.log('✅ FFmpeg INSTALLED');
+                if (fs.existsSync(srcFFmpeg)) {
+                    fs.copyFileSync(srcFFmpeg, ffmpegPath);
+                    fs.chmodSync(ffmpegPath, '755');
+                    console.log('✅ FFmpeg INSTALLED');
                 }
                 
-                If (fs.existsSync(srcFFprobe)) {
-                    Fs.copyFileSync(srcFFprobe, ffprobePath);
-                    Fs.chmodSync(ffprobePath, '755');
-                    Console.log('✅ FFprobe INSTALLED');
+                if (fs.existsSync(srcFFprobe)) {
+                    fs.copyFileSync(srcFFprobe, ffprobePath);
+                    fs.chmodSync(ffprobePath, '755');
+                    console.log('✅ FFprobe INSTALLED');
                 }
             }
             
-            Fs.unlinkSync(tempFile);
-            Fs.rmSync(extractDir, { recursive: true, force: true });
+            fs.unlinkSync(tempFile);
+            fs.rmSync(extractDir, { recursive: true, force: true });
             
-            Process.env.PATH = `${ffmpegDir}:${process.env.PATH}`;
-            Console.log('✅ ADDED FFMPEG TO PATH');
+            process.env.PATH = `${ffmpegDir}:${process.env.PATH}`;
+            console.log('✅ ADDED FFMPEG TO PATH');
             
-            Try {
-                Const result = execSync(`"${ffmpegPath}" -version`, { stdio: 'pipe', encoding: 'utf8' });
-                Const version = result.split('\n')[0];
-                Console.log(`🎉 FFMPEG INSTALLED SUCCESSFULLY: ${version.substring(0, 50)}...`);
-                Return true;
+            try {
+                const result = execSync(`"${ffmpegPath}" -version`, { stdio: 'pipe', encoding: 'utf8' });
+                const version = result.split('\n')[0];
+                console.log(`🎉 FFMPEG INSTALLED SUCCESSFULLY: ${version.substring(0, 50)}...`);
+                return true;
             } catch (e) {
-                Console.log('❌ FFMPEG INSTALLATION VERIFICATION FAILED');
-                Return false;
+                console.log('❌ FFMPEG INSTALLATION VERIFICATION FAILED');
+                return false;
             }
             
         } catch (error) {
-            Console.error('❌ Failed to download FFmpeg:', error.message);
-            Console.log('⚠️ Some features like stickers and audio effects may not work');
-            Console.log('💡 Please install FFmpeg manually on your hosting panel');
-            Return false;
+            console.error('❌ Failed to download FFmpeg:', error.message);
+            console.log('⚠️ Some features like stickers and audio effects may not work');
+            console.log('💡 Please install FFmpeg manually on your hosting panel');
+            return false;
         }
     }
 
     // ============================================
     // MAIN BOT STARTUP
     // ============================================
-    Async function startBot() {
-        Const express = require('express');
-        Const app = express();
-        App.use(express.json());
+    async function startBot() {
+        const express = require('express');
+        const app = express();
+        app.use(express.json());
 
-        Const port = process.env.PORT || 8000;
+        const port = process.env.PORT || 8000;
         
         // Express Endpoint for Telegram Pairing Integration
-        App.post('/pair', async (req, res) => {
-            Const { phone } = req.body;
-            If (!phone) {
-                Return res.status(400).json({ status: false, error: 'Phone number is required' });
+        app.post('/pair', async (req, res) => {
+            const { phone } = req.body;
+            if (!phone) {
+                return res.status(400).json({ status: false, error: 'Phone number is required' });
             }
 
-            Try {
-                Let phoneNum = phone.replace(/[^0-9]/g, '');
+            try {
+                let phoneNum = phone.replace(/[^0-9]/g, '');
                 
-                // Wait up to 10 seconds if WhatsApp instance is connecting
-                Let retries = 0;
-                While (!global.XeonBotIncInstance && retries < 10) {
-                    Await new Promise(r => setTimeout(r, 1000));
-                    Retries++;
+                let retries = 0;
+                while (!global.XeonBotIncInstance && retries < 10) {
+                    await new Promise(r => setTimeout(r, 1000));
+                    retries++;
                 }
 
-                If (global.XeonBotIncInstance) {
-                    Let code = await global.XeonBotIncInstance.requestPairingCode(phoneNum);
-                    Code = code?.match(/.{1,4}/g)?.join("-") || code;
-                    Return res.json({ status: true, code: code });
+                if (global.XeonBotIncInstance) {
+                    let code = await global.XeonBotIncInstance.requestPairingCode(phoneNum);
+                    code = code?.match(/.{1,4}/g)?.join("-") || code;
+                    return res.json({ status: true, code: code });
                 } else {
-                    Return res.status(500).json({ status: false, error: 'WhatsApp is still connecting... Please try again in 5 seconds.' });
+                    return res.status(500).json({ status: false, error: 'WhatsApp is still connecting... Please try again in 5 seconds.' });
                 }
             } catch (err) {
-                Return res.status(500).json({ status: false, error: err.message });
+                return res.status(500).json({ status: false, error: err.message });
             }
         });
 
-        App.get('/', (req, res) => res.send('Bot is Alive!'));
-        App.listen(port, () => console.log(`🚀 Keep-alive & Pairing server running on port ${port}`));
+        app.get('/', (req, res) => res.send('Bot is Alive!'));
+        app.listen(port, () => console.log(`🚀 Keep-alive & Pairing server running on port ${port}`));
 
-        // Spawn Telegram Pairing Bot ONLY in worker process to prevent duplicates
-        If (cluster.isWorker && fs.existsSync(path.join(__dirname, 'pair_bot.js'))) {
-            Try {
-                Const telegramProcess = spawn('node', ['pair_bot.js']);
-                TelegramProcess.stdout.on('data', (data) => console.log(`[Telegram Bot]: ${data.toString().trim()}`));
-                TelegramProcess.stderr.on('data', (data) => console.error(`[Telegram Bot Error]: ${data.toString().trim()}`));
+        if (cluster.isWorker && fs.existsSync(path.join(__dirname, 'pair_bot.js'))) {
+            try {
+                const telegramProcess = spawn('node', ['pair_bot.js']);
+                telegramProcess.stdout.on('data', (data) => console.log(`[Telegram Bot]: ${data.toString().trim()}`));
+                telegramProcess.stderr.on('data', (data) => console.error(`[Telegram Bot Error]: ${data.toString().trim()}`));
             } catch (err) {
-                Console.error('❌ Failed to start pair_bot.js:', err.message);
+                console.error('❌ Failed to start pair_bot.js:', err.message);
             }
         }
 
-        Console.log('\n╔════════════════════════════════════╗');
-        Console.log('║    🚀 ZORO MD BOT STARTING...        ║');
-        Console.log('╚════════════════════════════════════╝\n');
+        console.log('\n╔════════════════════════════════════╗');
+        console.log('║    🚀 ZORO MD BOT STARTING...        ║');
+        console.log('╚════════════════════════════════════╝\n');
         
-        Console.log('📥 CHECKING FOR MODULE UPDATES...');
-        Try {
-            Await downloadAndExtractModules();
+        console.log('📥 CHECKING FOR MODULE UPDATES...');
+        try {
+            await downloadAndExtractModules();
         } catch (err) {
-            Console.log('⚠️ Module update check failed, continuing with existing files...');
+            console.log('⚠️ Module update check failed, continuing with existing files...');
         }
         
-        Await checkAndInstallFFmpeg();
+        await checkAndInstallFFmpeg();
         
-        Console.log('\n🤖 LOADING BOT MODULES...\n');
+        console.log('\n🤖 LOADING BOT MODULES...\n');
 
-        Require('./settings');
-        Const { Boom } = require('@hapi/boom');
-        Const chalk = require('chalk');
-        Const FileType = require('file-type');
-        Const { handleMessages, handleGroupParticipantUpdate, handleStatus } = require('./main');
+        require('./settings');
+        const { Boom } = require('@hapi/boom');
+        const chalk = require('chalk');
+        const FileType = require('file-type');
+        const { handleMessages, handleGroupParticipantUpdate, handleStatus } = require('./main');
         
         // Import Anti-Status Mention Plugin
-        Const { handleAntiStatusMention, toggleAntiStatusMention } = require('./antiStatusMention');
+        const { handleAntiStatusMention, toggleAntiStatusMention } = require('./antiStatusMention');
 
-        Const PhoneNumber = require('awesome-phonenumber');
-        Const { imageToWebp, videoToWebp, writeExifImg, writeExifVid } = require('./lib/exif');
-        Const { smsg, isUrl, generateMessageTag, getBuffer, getSizeMedia, fetch, await: awaitFunc, sleep, reSize } = require('./lib/myfunc');
-        Const {
-            Default: makeWASocket,
-            UseMultiFileAuthState,
+        const PhoneNumber = require('awesome-phonenumber');
+        const { imageToWebp, videoToWebp, writeExifImg, writeExifVid } = require('./lib/exif');
+        const { smsg, isUrl, generateMessageTag, getBuffer, getSizeMedia, fetch, await: awaitFunc, sleep, reSize } = require('./lib/myfunc');
+        const {
+            default: makeWASocket,
+            useMultiFileAuthState,
             DisconnectReason,
-            FetchLatestBaileysVersion,
-            GenerateForwardMessageContent,
-            PrepareWAMessageMedia,
-            GenerateWAMessageFromContent,
-            GenerateMessageID,
-            DownloadContentFromMessage,
-            JidDecode,
-            Proto,
-            JidNormalizedUser,
-            MakeCacheableSignalKeyStore,
-            Delay
+            fetchLatestBaileysVersion,
+            generateForwardMessageContent,
+            prepareWAMessageMedia,
+            generateWAMessageFromContent,
+            generateMessageID,
+            downloadContentFromMessage,
+            jidDecode,
+            proto,
+            jidNormalizedUser,
+            makeCacheableSignalKeyStore,
+            delay
         } = require("@whiskeysockets/baileys");
-        Const NodeCache = require("node-cache");
-        Const pino = require("pino");
-        Const readline = require("readline");
-        Const { parsePhoneNumber } = require("libphonenumber-js");
-        Const { PHONENUMBER_MCC } = require('@whiskeysockets/baileys/lib/Utils/generics');
-        Const { rmSync, existsSync } = require('fs');
-        Const { join } = require('path');
+        const NodeCache = require("node-cache");
+        const pino = require("pino");
+        const readline = require("readline");
+        const { parsePhoneNumber } = require("libphonenumber-js");
+        const { PHONENUMBER_MCC } = require('@whiskeysockets/baileys/lib/Utils/generics');
+        const { rmSync, existsSync } = require('fs');
+        const { join } = require('path');
 
-        Const store = require('./lib/lightweight_store');
+        const store = require('./lib/lightweight_store');
 
-        Store.readFromFile();
-        Const settings = require('./settings');
-        SetInterval(() => store.writeToFile(), settings.storeWriteInterval || 10000);
+        store.readFromFile();
+        const settings = require('./settings');
+        setInterval(() => store.writeToFile(), settings.storeWriteInterval || 10000);
 
-        Const MessageQueue = require('./lib/messageQueue');
-        Const messageQueue = new MessageQueue();
+        const MessageQueue = require('./lib/messageQueue');
+        const messageQueue = new MessageQueue();
 
-        SetInterval(() => {
-            If (global.gc) {
-                Global.gc();
-                Console.log('🧹 Garbage collection completed');
+        setInterval(() => {
+            if (global.gc) {
+                global.gc();
+                console.log('🧹 Garbage collection completed');
             }
         }, 60_000);
 
-        SetInterval(() => {
-            Const used = process.memoryUsage().rss / 1024 / 1024;
-            If (used > 400) {
-                Console.log('⚠️ RAM too high (>400MB), restarting bot...');
-                Process.exit(1);
+        setInterval(() => {
+            const used = process.memoryUsage().rss / 1024 / 1024;
+            if (used > 400) {
+                console.log('⚠️ RAM too high (>400MB), restarting bot...');
+                process.exit(1);
             }
         }, 30_000);
 
-        Let owner = JSON.parse(fs.readFileSync('./data/owner.json'));
+        let owner = JSON.parse(fs.readFileSync('./data/owner.json'));
 
-        Global.botname = "ZORO BOT";
-        Global.themeemoji = "•";
+        global.botname = "ZORO BOT";
+        global.themeemoji = "•";
 
-        Async function startXeonBotInc() {
-            Let { version, isLatest } = await fetchLatestBaileysVersion();
+        async function startXeonBotInc() {
+            let { version, isLatest } = await fetchLatestBaileysVersion();
             
-            Const sessionDir = './session';
-            If (!fs.existsSync(sessionDir)) {
-                Fs.mkdirSync(sessionDir, { recursive: true });
+            const sessionDir = './session';
+            if (!fs.existsSync(sessionDir)) {
+                fs.mkdirSync(sessionDir, { recursive: true });
             }
             
-            If (process.env.SESSION_ID) {
-                Try {
-                    Let sessionId = process.env.SESSION_ID;
-                    SessionId = sessionId.replace(/^["']|["']$/g, '');
-                    If (sessionId.includes(':~')) {
-                        SessionId = sessionId.split(':~')[1];
+            if (process.env.SESSION_ID) {
+                try {
+                    let sessionId = process.env.SESSION_ID;
+                    sessionId = sessionId.replace(/^["']|["']$/g, '');
+                    if (sessionId.includes(':~')) {
+                        sessionId = sessionId.split(':~')[1];
                     }
-                    Const sessionData = Buffer.from(sessionId, 'base64').toString('utf-8');
-                    Const credsPath = path.join(sessionDir, 'creds.json');
-                    Fs.writeFileSync(credsPath, sessionData);
-                    Console.log('✅ Session loaded from .env SESSION_ID');
+                    const sessionData = Buffer.from(sessionId, 'base64').toString('utf-8');
+                    const credsPath = path.join(sessionDir, 'creds.json');
+                    fs.writeFileSync(credsPath, sessionData);
+                    console.log('✅ Session loaded from .env SESSION_ID');
                 } catch (err) {
-                    Console.log('⚠️ Could not decode SESSION_ID from .env:', err.message);
+                    console.log('⚠️ Could not decode SESSION_ID from .env:', err.message);
                 }
             }
             
-            Const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
-            Const msgRetryCounterCache = new NodeCache();
+            const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
+            const msgRetryCounterCache = new NodeCache();
 
-            Const XeonBotInc = makeWASocket({
-                Version,
-                Logger: pino({ level: 'silent' }),
-                PrintQRInTerminal: false,
-                Browser: ["Ubuntu", "Chrome", "20.0.04"],
-                Auth: {
-                    Creds: state.creds,
-                    Keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "fatal" }).child({ level: "fatal" })),
+            const XeonBotInc = makeWASocket({
+                version,
+                logger: pino({ level: 'silent' }),
+                printQRInTerminal: false,
+                browser: ["Ubuntu", "Chrome", "20.0.04"],
+                auth: {
+                    creds: state.creds,
+                    keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "fatal" }).child({ level: "fatal" })),
                 },
-                MarkOnlineOnConnect: true,
-                GenerateHighQualityLinkPreview: true,
-                SyncFullHistory: true,
-                GetMessage: async (key) => {
-                    Let jid = jidNormalizedUser(key.remoteJid);
-                    Let msg = await store.loadMessage(jid, key.id);
-                    Return msg?.message || "";
+                markOnlineOnConnect: true,
+                generateHighQualityLinkPreview: true,
+                syncFullHistory: true,
+                getMessage: async (key) => {
+                    let jid = jidNormalizedUser(key.remoteJid);
+                    let msg = await store.loadMessage(jid, key.id);
+                    return msg?.message || "";
                 },
-                MsgRetryCounterCache,
-                DefaultQueryTimeoutMs: undefined,
+                msgRetryCounterCache,
+                defaultQueryTimeoutMs: undefined,
             });
 
-            // Store global instance for Telegram API route
-            Global.XeonBotIncInstance = XeonBotInc;
+            global.XeonBotIncInstance = XeonBotInc;
 
-            Store.bind(XeonBotInc.ev);
+            store.bind(XeonBotInc.ev);
 
-            Const { wrapSendMessage } = require('./lib/fontTransformer');
-            WrapSendMessage(XeonBotInc);
+            const { wrapSendMessage } = require('./lib/fontTransformer');
+            wrapSendMessage(XeonBotInc);
 
-            Const originalSendMessage = XeonBotInc.sendMessage;
-            Const baseSendMessage = originalSendMessage;
-            Let hasConnectedOnce = false;
+            const originalSendMessage = XeonBotInc.sendMessage;
+            const baseSendMessage = originalSendMessage;
+            let hasConnectedOnce = false;
 
             XeonBotInc.sendMessage = async function(jid, content, options = {}) {
-                Try {
-                    Return await originalSendMessage.call(this, jid, content, options);
+                try {
+                    return await originalSendMessage.call(this, jid, content, options);
                 } catch (error) {
-                    Console.log(`⚠️ Message send failed, queueing for retry: ${error.message}`);
-                    MessageQueue.addMessage(jid, content, 1);
-                    Throw error;
+                    console.log(`⚠️ Message send failed, queueing for retry: ${error.message}`);
+                    messageQueue.addMessage(jid, content, 1);
+                    throw error;
                 }
             };
 
             XeonBotInc.sendMessageDirect = async function(jid, content, options = {}) {
-                Return await baseSendMessage.call(this, jid, content, options);
+                return await baseSendMessage.call(this, jid, content, options);
             };
 
             XeonBotInc.ev.on('messages.upsert', async chatUpdate => {
-                Try {
-                    Const mek = chatUpdate.messages[0];
-                    If (!mek.message) return;
-                    Mek.message = (Object.keys(mek.message)[0] === 'ephemeralMessage') ? mek.message.ephemeralMessage.message : mek.message;
+                try {
+                    const mek = chatUpdate.messages[0];
+                    if (!mek.message) return;
+                    mek.message = (Object.keys(mek.message)[0] === 'ephemeralMessage') ? mek.message.ephemeralMessage.message : mek.message;
                     
-                    Const chatId = mek.key.remoteJid;
-                    Const senderId = mek.key.participant || chatId;
+                    const chatId = mek.key.remoteJid;
+                    const senderId = mek.key.participant || chatId;
 
-                    If (chatId === 'status@broadcast') {
-                        Await handleStatus(XeonBotInc, chatUpdate);
-                        Return;
+                    if (chatId === 'status@broadcast') {
+                        await handleStatus(XeonBotInc, chatUpdate);
+                        return;
                     }
                     
                     // Handle Anti-Status Mention Check
-                    Try {
-                        Await handleAntiStatusMention(XeonBotInc, chatId, mek, senderId);
+                    try {
+                        await handleAntiStatusMention(XeonBotInc, chatId, mek, senderId);
                     } catch (e) {
-                        Console.error("Error in anti-status mention handler:", e);
+                        console.error("Error in anti-status mention handler:", e);
                     }
 
-                    If (mek.key.id.startsWith('BAE5') && mek.key.id.length === 16) return;
+                    if (mek.key.id.startsWith('BAE5') && mek.key.id.length === 16) return;
 
-                    If (XeonBotInc?.msgRetryCounterCache) {
+                    if (XeonBotInc?.msgRetryCounterCache) {
                         XeonBotInc.msgRetryCounterCache.clear();
                     }
 
-                    // Check for Anti-Status Toggle Command (e.g. .antistatus on/off)
-                    Const messageText = mek.message.conversation || mek.message.extendedTextMessage?.text || '';
-                    If (messageText.trim().toLowerCase().startsWith('.antistatus')) {
-                        Let isGroupAdmin = false;
-                        If (chatId.endsWith('@g.us')) {
-                            Try {
-                                Const metadata = await XeonBotInc.groupMetadata(chatId);
-                                Const admins = metadata.participants.filter(v => v.admin !== null).map(v => v.id);
-                                IsGroupAdmin = admins.includes(senderId);
+                    // Check for Anti-Status Toggle Command (.antistatus on/off)
+                    const messageText = mek.message.conversation || mek.message.extendedTextMessage?.text || mek.message.imageMessage?.caption || '';
+                    if (messageText.trim().toLowerCase().startsWith('.antistatus')) {
+                        let isGroupAdmin = false;
+                        if (chatId.endsWith('@g.us')) {
+                            try {
+                                const metadata = await XeonBotInc.groupMetadata(chatId);
+                                const admins = metadata.participants.filter(v => v.admin !== null).map(v => v.id);
+                                isGroupAdmin = admins.includes(senderId);
                             } catch (err) {
-                                IsGroupAdmin = false;
+                                isGroupAdmin = false;
                             }
                         }
-                        Await toggleAntiStatusMention(XeonBotInc, chatId, messageText, senderId, isGroupAdmin);
-                        Return;
+                        await toggleAntiStatusMention(XeonBotInc, chatId, messageText, senderId, isGroupAdmin);
+                        return;
                     }
 
-                    Try {
-                        Await handleMessages(XeonBotInc, chatUpdate, true);
+                    try {
+                        await handleMessages(XeonBotInc, chatUpdate, true);
                     } catch (err) {
-                        Console.error("Error in handleMessages:", err);
-                        If (mek.key && mek.key.remoteJid) {
-                            Await XeonBotInc.sendMessage(mek.key.remoteJid, {
-                                Text: '❌ An error occurred while processing your message.',
+                        console.error("Error in handleMessages:", err);
+                        if (mek.key && mek.key.remoteJid) {
+                            await XeonBotInc.sendMessage(mek.key.remoteJid, {
+                                text: '❌ An error occurred while processing your message.',
                             }).catch(console.error);
                         }
                     }
                 } catch (err) {
-                    Console.error("Error in messages.upsert:", err);
+                    console.error("Error in messages.upsert:", err);
                 }
             });
 
             XeonBotInc.decodeJid = (jid) => {
-                If (!jid) return jid;
-                If (/:\d+@/gi.test(jid)) {
-                    Let decode = jidDecode(jid) || {};
-                    Return decode.user && decode.server && decode.user + '@' + decode.server || jid;
+                if (!jid) return jid;
+                if (/:\d+@/gi.test(jid)) {
+                    let decode = jidDecode(jid) || {};
+                    return decode.user && decode.server && decode.user + '@' + decode.server || jid;
                 } else return jid;
             };
 
             XeonBotInc.ev.on('contacts.update', update => {
-                For (let contact of update) {
-                    Let id = XeonBotInc.decodeJid(contact.id);
-                    If (store && store.contacts) store.contacts[id] = { id, name: contact.notify };
+                for (let contact of update) {
+                    let id = XeonBotInc.decodeJid(contact.id);
+                    if (store && store.contacts) store.contacts[id] = { id, name: contact.notify };
                 }
             });
 
             XeonBotInc.getName = (jid, withoutContact = false) => {
-                Let id = XeonBotInc.decodeJid(jid);
-                WithoutContact = XeonBotInc.withoutContact || withoutContact;
-                Let v;
-                If (id.endsWith("@g.us")) return new Promise(async (resolve) => {
-                    V = store.contacts[id] || {};
-                    If (!(v.name || v.subject)) v = XeonBotInc.groupMetadata(id) || {};
-                    Resolve(v.name || v.subject || PhoneNumber('+' + id.replace('@s.whatsapp.net', '')).getNumber('international'));
+                let id = XeonBotInc.decodeJid(jid);
+                withoutContact = XeonBotInc.withoutContact || withoutContact;
+                let v;
+                if (id.endsWith("@g.us")) return new Promise(async (resolve) => {
+                    v = store.contacts[id] || {};
+                    if (!(v.name || v.subject)) v = XeonBotInc.groupMetadata(id) || {};
+                    resolve(v.name || v.subject || PhoneNumber('+' + id.replace('@s.whatsapp.net', '')).getNumber('international'));
                 });
-                Else v = id === '0@s.whatsapp.net' ? {
-                    Id,
-                    Name: 'WhatsApp'
+                else v = id === '0@s.whatsapp.net' ? {
+                    id,
+                    name: 'WhatsApp'
                 } : id === XeonBotInc.decodeJid(XeonBotInc.user.id) ?
                     XeonBotInc.user :
                     (store.contacts[id] || {});
-                Return (withoutContact ? '' : v.name) || v.subject || v.verifiedName || PhoneNumber('+' + jid.replace('@s.whatsapp.net', '')).getNumber('international');
+                return (withoutContact ? '' : v.name) || v.subject || v.verifiedName || PhoneNumber('+' + jid.replace('@s.whatsapp.net', '')).getNumber('international');
             };
 
             XeonBotInc.public = true;
             XeonBotInc.serializeM = (m) => smsg(XeonBotInc, m, store);
 
             XeonBotInc.ev.on('connection.update', async (s) => {
-                Const { connection, lastDisconnect } = s;
-                If (connection == "open") {
-                    Console.log(chalk.magenta(` `));
-                    Console.log(chalk.yellow(`🦅 CONNECTED TO => ` + JSON.stringify(XeonBotInc.user, null, 2)));
+                const { connection, lastDisconnect } = s;
+                if (connection == "open") {
+                    console.log(chalk.magenta(` `));
+                    console.log(chalk.yellow(`🦅 CONNECTED TO => ` + JSON.stringify(XeonBotInc.user, null, 2)));
 
-                    MessageQueue.setConnected(true);
-                    Await messageQueue.processQueue(XeonBotInc);
+                    messageQueue.setConnected(true);
+                    await messageQueue.processQueue(XeonBotInc);
 
-                    Const botNumber = XeonBotInc.user.id.split(':')[0] + '@s.whatsapp.net';
+                    const botNumber = XeonBotInc.user.id.split(':')[0] + '@s.whatsapp.net';
                     
-                    If (!hasConnectedOnce) {
-                        HasConnectedOnce = true;
+                    if (!hasConnectedOnce) {
+                        hasConnectedOnce = true;
                         
-                        Await XeonBotInc.sendMessageDirect(botNumber, {
-                            Text: "✨ *Bot Successfully Updated & Restarted!* ✅"
+                        await XeonBotInc.sendMessageDirect(botNumber, {
+                            text: "✨ *Bot Successfully Updated & Restarted!* ✅"
                         }).catch(err => console.log('⚠️ Could not send update message:', err.message));
 
-                        Await delay(2000);
+                        await delay(2000);
 
-                        Await XeonBotInc.sendMessageDirect(botNumber, {
-                            Text: `
+                        await XeonBotInc.sendMessageDirect(botNumber, {
+                            text: `
 ┏❐═⭔ *ZORO CONNECTED SUCCESSFULLY* ⭔═❐
 ┃⭔ *Bot:* ZORO MD 
 ┃⭔ *Time:* ${new Date().toLocaleString()}
@@ -581,101 +578,101 @@ https://chat.whatsapp.com/IUe14A04uicGJdIOfBuuvd?s=cl&p=a&ilr=1`,
                         }).catch(err => console.log('⚠️ Could not send connection message:', err.message));
                     }
 
-                    SetInterval(() => messageQueue.processQueue(XeonBotInc), 10000);
+                    setInterval(() => messageQueue.processQueue(XeonBotInc), 10000);
 
-                    Await delay(1999);
+                    await delay(1999);
                     
-                    Console.log(chalk.yellow(`\n\n╭━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╮`));
-                    Console.log(chalk.bold.blue(`│     🔥 ZORO MD BOT 🔥      │`));
-                    Console.log(chalk.yellow(`╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯\n`));
+                    console.log(chalk.yellow(`\n\n╭━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╮`));
+                    console.log(chalk.bold.blue(`│     🔥 ZORO MD BOT 🔥      │`));
+                    console.log(chalk.yellow(`╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯\n`));
                     
-                    Console.log(chalk.cyan(`╔════════════════════════════════════╗`));
-                    Console.log(chalk.green(`║  ✅ ZORO CONNECTION SUCCESSFUL! ✅     ║`));
-                    Console.log(chalk.cyan(`╠════════════════════════════════════╣`));
-                    Console.log(chalk.magenta(`║ 👤 Owner: Aadhixd                  ║`));
-                    Console.log(chalk.magenta(`║ 📱 Number: ${owner}                 ║`));
-                    Console.log(chalk.magenta(`║ 💎 Version: ${settings.version || '3.0.0'}                     ║`));
-                    Console.log(chalk.magenta(`║ ⏰ Time: ${new Date().toLocaleString()}  ║`));
-                    Console.log(chalk.magenta(`║ 🔥 Status: ACTIVE                  ║`));
-                    Console.log(chalk.cyan(`╚════════════════════════════════════╝\n`));
+                    console.log(chalk.cyan(`╔════════════════════════════════════╗`));
+                    console.log(chalk.green(`║  ✅ ZORO CONNECTION SUCCESSFUL! ✅     ║`));
+                    console.log(chalk.cyan(`╠════════════════════════════════════╣`));
+                    console.log(chalk.magenta(`║ 👤 Owner: Aadhixd                  ║`));
+                    console.log(chalk.magenta(`║ 📱 Number: ${owner}                 ║`));
+                    console.log(chalk.magenta(`║ 💎 Version: ${settings.version || '3.0.0'}                     ║`));
+                    console.log(chalk.magenta(`║ ⏰ Time: ${new Date().toLocaleString()}  ║`));
+                    console.log(chalk.magenta(`║ 🔥 Status: ACTIVE                  ║`));
+                    console.log(chalk.cyan(`╚════════════════════════════════════╝\n`));
                     
-                    Console.log(chalk.green(`${global.themeemoji || '•'} 🍁 ZORO MD IS ACTIVE 🔥`));
-                    Console.log(chalk.blue(`${global.themeemoji || '•'} All systems operational!`));
+                    console.log(chalk.green(`${global.themeemoji || '•'} 🍁 ZORO MD IS ACTIVE 🔥`));
+                    console.log(chalk.blue(`${global.themeemoji || '•'} All systems operational!`));
                 }
-                If (connection === 'close') {
-                    MessageQueue.setConnected(false);
-                    Console.log(chalk.yellow('⚠️ Connection lost - messages will be queued for retry'));
-                    Const statusCode = lastDisconnect?.error?.output?.statusCode;
-                    If (statusCode === DisconnectReason.loggedOut || statusCode === 401) {
-                        Try {
-                            RmSync('./session', { recursive: true, force: true });
+                if (connection === 'close') {
+                    messageQueue.setConnected(false);
+                    console.log(chalk.yellow('⚠️ Connection lost - messages will be queued for retry'));
+                    const statusCode = lastDisconnect?.error?.output?.statusCode;
+                    if (statusCode === DisconnectReason.loggedOut || statusCode === 401) {
+                        try {
+                            rmSync('./session', { recursive: true, force: true });
                         } catch { }
-                        Console.log(chalk.red('Session logged out. Please re-authenticate.'));
-                        StartXeonBotInc();
+                        console.log(chalk.red('Session logged out. Please re-authenticate.'));
+                        startXeonBotInc();
                     } else {
-                        Console.log(chalk.yellow('Reconnecting...'));
-                        StartXeonBotInc();
+                        console.log(chalk.yellow('Reconnecting...'));
+                        startXeonBotInc();
                     }
                 }
             });
 
-            Const { handleCall } = require('./plugins/anticall-improved');
+            const { handleCall } = require('./plugins/anticall-improved');
             XeonBotInc.ev.on('call', async (calls) => {
-                Try {
-                    For (const call of calls) {
-                        Const callData = {
-                            From: call.from || call.peerJid || call.chatId,
-                            Id: call.id,
-                            Status: call.status || 'offer'
+                try {
+                    for (const call of calls) {
+                        const callData = {
+                            from: call.from || call.peerJid || call.chatId,
+                            id: call.id,
+                            status: call.status || 'offer'
                         };
-                        Await handleCall(XeonBotInc, callData);
+                        await handleCall(XeonBotInc, callData);
                     }
                 } catch (e) {
-                    Console.error('Error handling call:', e);
+                    console.error('Error handling call:', e);
                 }
             });
 
             XeonBotInc.ev.on('creds.update', saveCreds);
             XeonBotInc.ev.on('group-participants.update', async (update) => {
-                Await handleGroupParticipantUpdate(XeonBotInc, update);
+                await handleGroupParticipantUpdate(XeonBotInc, update);
             });
             XeonBotInc.ev.on('messages.upsert', async (m) => {
-                If (m.messages[0].key && m.messages[0].key.remoteJid === 'status@broadcast') {
-                    Await handleStatus(XeonBotInc, m);
+                if (m.messages[0].key && m.messages[0].key.remoteJid === 'status@broadcast') {
+                    await handleStatus(XeonBotInc, m);
                 }
             });
             XeonBotInc.ev.on('status.update', async (status) => {
-                Await handleStatus(XeonBotInc, status);
+                await handleStatus(XeonBotInc, status);
             });
             XeonBotInc.ev.on('messages.reaction', async (status) => {
-                Await handleStatus(XeonBotInc, status);
+                await handleStatus(XeonBotInc, status);
             });
 
-            Return XeonBotInc;
+            return XeonBotInc;
         }
 
-        Console.log(chalk.green('\n🤖 STARTING WHATSAPP CONNECTION...\n'));
-        Await startXeonBotInc();
+        console.log(chalk.green('\n🤖 STARTING WHATSAPP CONNECTION...\n'));
+        await startXeonBotInc();
     }
 
-    StartBot().catch(error => {
-        Console.error('Fatal error:', error);
-        Process.exit(1);
+    startBot().catch(error => {
+        console.error('Fatal error:', error);
+        process.exit(1);
     });
 
-    Process.on('uncaughtException', (err) => {
-        Console.error('Uncaught Exception:', err);
+    process.on('uncaughtException', (err) => {
+        console.error('Uncaught Exception:', err);
     });
 
-    Process.on('unhandledRejection', (err) => {
-        Console.error('Unhandled Rejection:', err);
+    process.on('unhandledRejection', (err) => {
+        console.error('Unhandled Rejection:', err);
     });
 
-    Let file = require.resolve(__filename);
-    Fs.watchFile(file, () => {
-        Fs.unwatchFile(file);
-        Console.log(`Update ${__filename}`);
-        Delete require.cache[file];
-        Require(file);
+    let file = require.resolve(__filename);
+    fs.watchFile(file, () => {
+        fs.unwatchFile(file);
+        console.log(`Update ${__filename}`);
+        delete require.cache[file];
+        require(file);
     });
 }
