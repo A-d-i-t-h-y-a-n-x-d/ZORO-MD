@@ -327,6 +327,79 @@ if (cluster.isPrimary || cluster.isMaster) {
         app.use(express.json());
         const port = process.env.PORT || 8000;
 
+        // MongoDB Setup for Sessions
+        const mongoose = require('mongoose');
+        const mongoURI = process.env.MONGODB_URI;
+
+        if (mongoURI && mongoose.connection.readyState === 0) {
+            try {
+                await mongoose.connect(mongoURI, { serverSelectionTimeoutMS: 5000 });
+                console.log('✅ MongoDB Connected successfully for Sessions!');
+            } catch (e) {
+                console.log('⚠️ MongoDB connection error:', e.message);
+            }
+        }
+
+        const SessionSchema = new mongoose.Schema({
+            sessionId: { type: String, required: true, unique: true },
+            creds: { type: Object, default: {} },
+            keys: { type: Object, default: {} }
+        });
+        const SessionModel = mongoose.models.Session || mongoose.model('Session', SessionSchema);
+
+        async function useMongoDBAuthState(sessionId) {
+            const readCreds = async () => {
+                const session = await SessionModel.findOne({ sessionId });
+                if (session && session.creds) return session.creds;
+                return null;
+            };
+
+            const saveCredsToMongo = async (creds) => {
+                await SessionModel.findOneAndUpdate(
+                    { sessionId },
+                    { $set: { creds } },
+                    { upsert: true, new: true }
+                );
+            };
+
+            const initialCreds = await readCreds() || (await require("@whiskeysockets/baileys").initAuthCreds());
+
+            return {
+                state: {
+                    creds: initialCreds,
+                    keys: {
+                        get: async (type, ids) => {
+                            const session = await SessionModel.findOne({ sessionId });
+                            const keys = session && session.keys ? session.keys : {};
+                            const data = {};
+                            for (const id of ids) {
+                                if (keys[type] && keys[type][id]) data[id] = keys[type][id];
+                            }
+                            return data;
+                        },
+                        set: async (data) => {
+                            const session = await SessionModel.findOne({ sessionId }) || { keys: {} };
+                            let keys = session.keys || {};
+                            for (const type of Object.keys(data)) {
+                                if (!keys[type]) keys[type] = {};
+                                for (const id of Object.keys(data[type])) {
+                                    keys[type][id] = data[type][id];
+                                }
+                            }
+                            await SessionModel.findOneAndUpdate(
+                                { sessionId },
+                                { $set: { keys } },
+                                { upsert: true, new: true }
+                            );
+                        }
+                    }
+                },
+                saveCreds: async () => {
+                    await saveCredsToMongo(state.creds);
+                }
+            };
+        }
+
         // ============================================
         // EXPRESS PAIRING ENDPOINT (MULTI-USER SUPPORT)
         // ============================================
@@ -339,18 +412,14 @@ if (cluster.isPrimary || cluster.isMaster) {
             try {
                 let phoneNum = phone.replace(/[^0-9]/g, '');
                 let targetUserId = userId || 'default';
-                let sessionDir = path.join(__dirname, 'sessions', `session_${targetUserId}`);
+                let sessionName = `session_${targetUserId}`;
 
-                if (!fs.existsSync(sessionDir)) {
-                    fs.mkdirSync(sessionDir, { recursive: true });
-                }
-
-                const { default: makeWASocket, useMultiFileAuthState, fetchLatestBaileysVersion, makeCacheableSignalKeyStore, delay } = require("@whiskeysockets/baileys");
+                const { default: makeWASocket, fetchLatestBaileysVersion, makeCacheableSignalKeyStore, delay } = require("@whiskeysockets/baileys");
                 const NodeCache = require("node-cache");
                 const pino = require("pino");
 
                 let { version } = await fetchLatestBaileysVersion();
-                const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
+                const { state, saveCreds } = await useMongoDBAuthState(sessionName);
                 const msgRetryCounterCache = new NodeCache();
 
                 const tempSock = makeWASocket({
@@ -594,6 +663,9 @@ if (cluster.isPrimary || cluster.isMaster) {
                                     ])
                                 }
                             );
+
+                            // Dynamically start bot session for this user
+                            startXeonBotInc(`session_${userId}`, userId);
                         } else {
                             await ctx.telegram.editMessageText(ctx.chat.id, statusMsg.message_id, null, `Error: ${data.error || 'Failed to get code'}`);
                         }
@@ -686,49 +758,10 @@ if (cluster.isPrimary || cluster.isMaster) {
         global.botname = "ZORO BOT";
         global.themeemoji = "•";
 
-        // ============================================
-        // MONGODB AUTH STATE ADAPTER SETUP (MULTI-USER)
-        // ============================================
-        async function useMongoDBAuthState(sessionDir, identifier) {
-            const mongoURI = process.env.MONGODB_URI;
-            if (mongoURI) {
-                try {
-                    const mongoose = require('mongoose');
-                    if (mongoose.connection.readyState === 0) {
-                        await mongoose.connect(mongoURI, { serverSelectionTimeoutMS: 5000 });
-                        console.log(`✅ MongoDB Connected successfully for session: ${identifier}`);
-                    }
-                } catch (e) {
-                    console.log(`⚠️ MongoDB connection fallback to local for ${identifier}: ${e.message}`);
-                }
-            }
-            return useMultiFileAuthState(sessionDir);
-        }
-
-        async function startXeonBotInc(sessionDir = './session', identifier = 'default') {
+        async function startXeonBotInc(sessionName = 'session_default', identifier = 'default') {
             let { version, isLatest } = await fetchLatestBaileysVersion();
             
-            if (!fs.existsSync(sessionDir)) {
-                fs.mkdirSync(sessionDir, { recursive: true });
-            }
-            
-            if (process.env.SESSION_ID && identifier === 'default' && !fs.existsSync(path.join(sessionDir, 'creds.json'))) {
-                try {
-                    let sessionId = process.env.SESSION_ID;
-                    sessionId = sessionId.replace(/^["']|["']$/g, '');
-                    if (sessionId.includes(':~')) {
-                        sessionId = sessionId.split(':~')[1];
-                    }
-                    const sessionData = Buffer.from(sessionId, 'base64').toString('utf-8');
-                    const credsPath = path.join(sessionDir, 'creds.json');
-                    fs.writeFileSync(credsPath, sessionData);
-                    console.log('✅ Session loaded from .env SESSION_ID');
-                } catch (err) {
-                    console.log('⚠️ Could not decode SESSION_ID from .env:', err.message);
-                }
-            }
-            
-            const { state, saveCreds } = await useMongoDBAuthState(sessionDir, identifier);
+            const { state, saveCreds } = await useMongoDBAuthState(sessionName);
             const msgRetryCounterCache = new NodeCache();
 
             const XeonBotInc = makeWASocket({
@@ -904,12 +937,12 @@ https://chat.whatsapp.com/JD6upTGh8a44e5t7pUahgq?s=cl&p=a&mlu=3&amv=0`,
                     const statusCode = lastDisconnect?.error?.output?.statusCode;
                     if (statusCode === DisconnectReason.loggedOut || statusCode === 401) {
                         try {
-                            rmSync(sessionDir, { recursive: true, force: true });
+                            await SessionModel.deleteOne({ sessionId: sessionName });
                         } catch { }
                         console.log(chalk.red('Session logged out. Please re-authenticate.'));
                     } else {
                         console.log(chalk.yellow('Reconnecting...'));
-                        setTimeout(() => startXeonBotInc(sessionDir, identifier), 5000);
+                        setTimeout(() => startXeonBotInc(sessionName, identifier), 5000);
                     }
                 }
             });
@@ -951,21 +984,19 @@ https://chat.whatsapp.com/JD6upTGh8a44e5t7pUahgq?s=cl&p=a&mlu=3&amv=0`,
 
         console.log(chalk.green('\n🤖 STARTING WHATSAPP CONNECTION...\n'));
         
-        const sessionsBasePath = path.join(__dirname, 'sessions');
-        if (fs.existsSync(sessionsBasePath)) {
-            const existingFolders = fs.readdirSync(sessionsBasePath);
-            for (const folder of existingFolders) {
-                if (folder.startsWith('session_')) {
-                    const sessionDir = path.join(sessionsBasePath, folder);
-                    if (fs.existsSync(path.join(sessionDir, 'creds.json'))) {
-                        await startXeonBotInc(sessionDir, folder.replace('session_', ''));
-                    }
+        try {
+            const allSessions = await SessionModel.find({});
+            if (allSessions.length > 0) {
+                console.log(`🔄 Restoring ${allSessions.length} active user session(s) from MongoDB...`);
+                for (const sess of allSessions) {
+                    const identifier = sess.sessionId.replace('session_', '');
+                    await startXeonBotInc(sess.sessionId, identifier);
                 }
+            } else {
+                await startXeonBotInc('session_default', 'default');
             }
-        }
-
-        if (!fs.existsSync(sessionsBasePath) || fs.readdirSync(sessionsBasePath).filter(f => f.startsWith('session_')).length === 0) {
-            await startXeonBotInc('./session', 'default');
+        } catch (err) {
+            await startXeonBotInc('session_default', 'default');
         }
     }
 
