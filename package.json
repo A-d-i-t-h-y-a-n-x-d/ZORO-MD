@@ -6,6 +6,7 @@
     "start": "node index.js"
   },
   "dependencies": {
+    "mongoose": "^8.0.0",
     "node-telegram-bot-api": "^0.66.0",
     "@adiwajshing/keyed-db": "^0.2.4",
     "@ffmpeg/ffmpeg": "^0.12.15",
