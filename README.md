@@ -33,13 +33,6 @@
 
 ---
 
-## ⚠️ Important Setup Workflow
-
-> **CRITICAL STEP:** 
-> Deploy or start the bot on your server/hosting platform first. **DO NOT** attempt to request a pairing code or session ID from Telegram before the process initializes. Wait until your console logs display **`WhatsApp Connection Started`**. Once this log appears, you can safely interact with the Telegram bot.
-
----
-
 ## ✨ Key Features of ZORO-MD
 
 * 📥 **Social Media Downloader:** Download videos, audio, and photos from Instagram, YouTube, TikTok, Facebook, and Spotify.
@@ -57,19 +50,6 @@
 2. **Git** installed on your system
 3. An active **WhatsApp Account**
 4. A **Telegram Bot Token** (Obtain via [@BotFather](https://t.me/BotFather) on Telegram)
-
----
-
-## 🔑 Session & Pairing Guide (Via Telegram)
-
-[![Telegram Bot](https://img.shields.io/badge/Telegram-Get%20Session%20%2F%20Pairing-2CA5E0?style=for-the-badge&logo=telegram)](https://t.me/Aadhi_xd_num_bot?start=_tgr_3EztBnM3ZjJl)
-
-1. Deploy the project on your hosting platform (Heroku, Render, VPS, Bot-Hosting.net, or Console Panel).
-2. Monitor your deployment console until you see the log: **`WhatsApp Connection Started`**.
-3. Open your Telegram Bot and send `/start`.
-4. Request your WhatsApp Pairing Code.
-5. Enter the pairing code in WhatsApp to complete authentication and retrieve your `SESSION_ID` automatically connected with the bot.
-6. If you are using Telegram X, use this username to find the bot: `@Aadhi_xd_num_bot`.
 
 ---
 
