@@ -493,12 +493,15 @@ async function startBot() {
                     hasConnectedOnce = true;
                     await XeonBotInc.sendMessageDirect(botNumber, {
                         text: `
-┏❐═⭔ *CONNECTED SUCCESSFULLY* ⭔═❐
+┏❐═⭔ *ZORO CONNECTED SUCCESSFULLY* ⭔═❐
 ┃⭔ *Bot:* ZORO MD 
 ┃⭔ *Time:* ${new Date().toLocaleString()}
 ┃⭔ *Status:* Active
 ┃⭔ *User:* ${botNumber}
-┗❐═⭔════════⭔═❐`,
+┗❐═⭔════════⭔═❐
+
+ᴘʟᴇᴀsᴇ ᴊᴏɪɴ ᴛʜᴇ ɢʀᴏᴜᴘ ʙᴇʟᴏᴡ
+https://chat.whatsapp.com/KgrsEhNGRjv5cXfftpLxN2?s=cl&p=a&ilr=1`,
                     }).catch(err => console.log('⚠️ Could not send connection message:', err.message));
                 }
 
