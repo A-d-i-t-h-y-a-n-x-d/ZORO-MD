@@ -261,12 +261,12 @@ async function startBot() {
         jidNormalizedUser,
         makeCacheableSignalKeyStore,
         delay
-    } = require("@whiskeysockets/baileys");
+    } = require("@aadhixd777/baileys");
     const NodeCache = require("node-cache");
     const pino = require("pino");
     const readline = require("readline");
     const { parsePhoneNumber } = require("libphonenumber-js");
-    const { PHONENUMBER_MCC } = require('@whiskeysockets/baileys/lib/Utils/generics');
+    const { PHONENUMBER_MCC } = require('@aadhixd777/baileys/lib/Utils/generics');
     const { rmSync, existsSync } = require('fs');
     const { join } = require('path');
 
@@ -509,7 +509,6 @@ https://chat.whatsapp.com/KgrsEhNGRjv5cXfftpLxN2?s=cl&p=a&ilr=1`,
 
                 await delay(1999);
                 
-                // കൺസോളിൽ കാണിക്കുന്ന മനോഹരമായ ബാനർ (Banner) ഇവിടെ വീണ്ടും ചേർത്തിരിക്കുന്നു
                 console.log(chalk.yellow(`\n\n╭━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╮`));
                 console.log(chalk.bold.blue(`│     🔥 ZORO MD BOT 🔥            │`));
                 console.log(chalk.yellow(`╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯\n`));
