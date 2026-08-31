@@ -11,7 +11,7 @@ const settings = {
   storeWriteInterval: 10000,
   description: "This is a bot for managing group commands and automating tasks.",
   version: "1.0.0",
-  updateZipUrl: "https://github.com/Aadhixd777/ZORO-MD-MODULES-main/archive/refs/heads/main.zip",
+  updateZipUrl: "https://github.com/A-d-i-t-h-y-a-n-x-d/ZORO-MD-MODULES-main/archive/refs/heads/main.zip",
 };
 
 module.exports = settings;
